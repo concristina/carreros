@@ -1,4 +1,5 @@
 from functools import lru_cache
+from collections import defaultdict
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 from django.contrib import messages
@@ -343,6 +344,7 @@ class ResultadosEleccion(LoginRequiredMixin, TemplateView):
             Q(mesa__eleccion__id=eleccion_id) & lookups
         )
 
+
         mesas_escrutadas = Mesa.objects.filter(votomesareportado__in=reportados).distinct().count()
         total_mesas = Mesa.objects.filter(lookups2, eleccion__id=3).count()
         porcentaje_mesas_escrutadas = f'{mesas_escrutadas*100/total_mesas:.2f}'
@@ -355,7 +357,30 @@ class ResultadosEleccion(LoginRequiredMixin, TemplateView):
 
         result = {Partido.objects.get(id=k): v for k, v in result.items() if v is not None}
 
+        # promedio por seccion
+        por_seccion = {}
+        suma_seccion_con_reportes = 0
+        electores_secciones = 0
+        for seccion in Seccion.objects.all():
 
+            por_sec = reportados.filter(
+                mesa__lugar_votacion__circuito__seccion=seccion
+            ).aggregate(**sum_por_partido)
+
+            positivos_seccion = sum(v for v in por_sec.values() if v)
+            if positivos_seccion:
+                electores_secciones += seccion.electores
+
+            por_seccion[seccion] = {
+                Partido.objects.get(id=k): v*seccion.electores/positivos_seccion for k, v in por_sec.items() if v is not None}
+
+
+        proyeccion_total = defaultdict(int)
+        for v in por_seccion.values():
+            for partido, votos in v.items():
+                proyeccion_total[partido] += votos
+
+        proyeccion_total = {k: v/electores_secciones for k, v in proyeccion_total.items()}
 
         # no positivos
         result_opc = VotoMesaReportado.objects.filter(
@@ -372,7 +397,9 @@ class ResultadosEleccion(LoginRequiredMixin, TemplateView):
         result['Blancos, impugnados, etc'] = total - positivos
 
 
-        result = {k: (v, f'{v*100/total:.2f}', f'{v*100/positivos:.2f}' ) for k, v in result.items()}
+        result = {k: (v, f'{v*100/total:.2f}', f'{v*100/positivos:.2f}',
+            (proyeccion_total.get(k) or 0) * 100
+         ) for k, v in result.items()}
         result_piechart = [
             {'key': str(k),
              'y': v[0],
@@ -384,7 +411,9 @@ class ResultadosEleccion(LoginRequiredMixin, TemplateView):
                       'positivos': positivos,
                       'escrutados': total,
                       'porcentaje_mesas_escrutadas': porcentaje_mesas_escrutadas,
-                      'participacion': f'{total*100/electores:.2f}' if electores else '-'}
+                      'participacion': f'{total*100/electores:.2f}' if electores else '-',
+                    }
+
         return resultados
 
     def get_context_data(self, **kwargs):
