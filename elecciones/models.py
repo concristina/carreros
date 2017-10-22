@@ -42,6 +42,16 @@ class Seccion(models.Model):
     def __str__(self):
         return f"{self.numero} - {self.nombre}"
 
+    @property
+    def electores(self):
+        return Mesa.objects.filter(eleccion__id=3,
+            lugar_votacion__circuito__seccion=self,
+        ).aggregate(v=Sum('electores'))['v']
+
+    @property
+    def peso(self):
+        return self.electores / Eleccion.actual().electores
+
 
 class Circuito(models.Model):
     seccion = models.ForeignKey(Seccion)
@@ -60,6 +70,15 @@ class Circuito(models.Model):
     def __str__(self):
         return f"{self.numero} - {self.nombre}"
 
+    @property
+    def electores(self):
+        return Mesa.objects.filter(eleccion__id=3,
+            lugar_votacion__circuito=self,
+        ).aggregate(v=Sum('electores'))['v']
+
+    @property
+    def peso(self):
+        return self.electores / Eleccion.actual().electores
 
     def resultados_url(self):
         # return reverse(
@@ -299,8 +318,7 @@ class Eleccion(models.Model):
 
     @classmethod
     def actual(cls):
-        actual = cls.objects.order_by('-id').first()
-        return actual
+        return cls.objects.get(id=3)
 
     @property
     def electores(self):

@@ -335,7 +335,11 @@ class ResultadosEleccion(LoginRequiredMixin, TemplateView):
         ).aggregate(
             **sum_por_partido
         )
+
+
         result = {Partido.objects.get(id=k): v for k, v in result.items() if v is not None}
+
+
 
         # no positivos
         result_opc = VotoMesaReportado.objects.filter(
@@ -410,7 +414,7 @@ class Resultados(LoginRequiredMixin, TemplateView):
         elif 'lugarvotacion' in self.request.GET:
             return LugarVotacion.objects.filter(id__in=self.request.GET.getlist('lugarvotacion'))
         elif 'mesa' in self.request.GET:
-            return Mesa.objects.filter(id__in=self.request.GET.getlist('mesa'))
+            return Mesa.objects.filter(numero__in=self.request.GET.getlist('mesa'))
 
     def menu_activo(self):
         if not self.filtros:

@@ -10,7 +10,7 @@ from .models import Attachment
 from .forms import AsignarMesaForm
 
 
-WAITING_FOR = 0.   # 3 minutos
+WAITING_FOR = 1   # 3 minutos
 
 
 @staff_member_required
@@ -21,8 +21,8 @@ def elegir_adjunto(request):
     # se eligen actas que nunca se intentaron cargar o que se asignaron a
     # hace más de 3 minutos
     attachments = Attachment.objects.filter(
-        Q(problema__isnull=True),
-        Q(taken__isnull=True) | Q(taken__lt=desde, mesa__isnull=True)
+        Q(problema__isnull=True, mesa__isnull=True),
+        Q(taken__isnull=True) | Q(taken__lt=desde)
     ).order_by('?')
     if attachments.exists():
         a = attachments[0]
