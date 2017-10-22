@@ -47,6 +47,7 @@
 
             {% if object.foto_del_acta %}
 
+           <a href="{{ object.foto_del_acta.url }}">ampliar</a>
            <img class="responsive-img" src="{{ object.foto_del_acta.thumbnail.960x.url }}">
 
             {% else %}
