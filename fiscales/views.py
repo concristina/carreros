@@ -43,7 +43,7 @@ from prensa.views import ConContactosMixin
 from adjuntos.models import Attachment
 from adjuntos.forms import SubirAttachmentModelForm
 
-WAITING_FOR = 1
+WAITING_FOR = 2
 
 def choice_home(request):
     """
@@ -659,10 +659,8 @@ def cargar_resultados(request, eleccion_id, mesa_numero):
             # vmr.eleccion = eleccion
             vmr.save()
 
-        if formset.warnings:
-            messages.warning(request, 'Guardado con inconsistencias')
-        else:
-            messages.success(request, 'Guardado correctamente')
+
+            messages.success(request, 'Guardados los resultados de la mesa ')
 
         return redirect('elegir-acta-a-cargar')
 
