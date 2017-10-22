@@ -158,12 +158,8 @@ class LugarVotacion(models.Model):
 
     @property
     def color(self):
-        if self.mesa_testigo:
+        if self.mesa.foto_del_acta:
             return 'blue'
-        if not self.asignacion.exists():
-            return 'red'
-        elif self.asignacion.filter(ingreso__isnull=False).exists():
-            return 'green'
         return 'orange'
 
     @property
