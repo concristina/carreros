@@ -312,27 +312,43 @@ class ResultadosEleccion(LoginRequiredMixin, TemplateView):
 
     def get_resultados(self, eleccion_id):
         lookups = Q()
+        lookups2 = Q()
         resultados = {}
         sum_por_partido, otras_opciones = ResultadosEleccion.agregaciones_por_partido(eleccion_id)
 
         if self.filtros:
             if 'seccion' in self.request.GET:
                 lookups = Q(mesa__lugar_votacion__circuito__seccion__in=self.filtros)
+                lookups2 = Q(lugar_votacion__circuito__seccion__in=self.filtros)
 
             elif 'circuito' in self.request.GET:
                 lookups = Q(mesa__lugar_votacion__circuito__in=self.filtros)
+                lookups2 = Q(lugar_votacion__circuito__in=self.filtros)
+
 
             elif 'lugarvotacion' in self.request.GET:
                 lookups = Q(mesa__lugar_votacion__in=self.filtros)
+                lookups2 = Q(lugar_votacion__in=self.filtros)
+
 
             elif 'mesa' in self.request.GET:
                 lookups = Q(mesa__id__in=self.filtros)
+                lookups2 = Q(id__in=self.filtros)
+
 
         electores = self.electores(eleccion_id)
         # primero para partidos
-        result = VotoMesaReportado.objects.filter(
+
+        reportados = VotoMesaReportado.objects.filter(
             Q(mesa__eleccion__id=eleccion_id) & lookups
-        ).aggregate(
+        )
+
+        mesas_escrutadas = Mesa.objects.filter(votomesareportado__in=reportados).distinct().count()
+        total_mesas = Mesa.objects.filter(lookups2, eleccion__id=3).count()
+        porcentaje_mesas_escrutadas = f'{mesas_escrutadas*100/total_mesas:.2f}'
+
+
+        result = reportados.aggregate(
             **sum_por_partido
         )
 
@@ -367,6 +383,7 @@ class ResultadosEleccion(LoginRequiredMixin, TemplateView):
                       'electores': electores,
                       'positivos': positivos,
                       'escrutados': total,
+                      'porcentaje_mesas_escrutadas': porcentaje_mesas_escrutadas,
                       'participacion': f'{total*100/electores:.2f}' if electores else '-'}
         return resultados
 

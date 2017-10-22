@@ -11,9 +11,9 @@ class Email(models.Model):
     date = models.CharField(max_length=100)
     from_address = models.CharField(max_length=200)
     body = models.TextField()
-    title = models.CharField(max_length=50)
+    title = models.CharField(max_length=150)
     uid = models.PositiveIntegerField()
-    message_id = models.CharField(max_length=200)
+    message_id = models.CharField(max_length=300)
 
     @classmethod
     def from_mail_object(cls, mail):
