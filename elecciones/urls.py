@@ -18,9 +18,10 @@ urlpatterns = [
     url('^mapa/(?P<elecciones_slug>\w+)/resultados.geojson$', cached(views.ResultadosOficialesGeoJSON.as_view()), name='resultados-geojson'),
     url('^resultados/mapa$', cached(views.MapaResultadosOficiales.as_view()), name='resultados-mapa'),
 
-    url('^resultados/(?P<eleccion_id>\d+)/$', views.ResultadosEleccion.as_view(), name='resultados-eleccion'),
     #url('^resultados/(?P<tipo>\w+)/(?P<numero>\d+)/(?P<nombre>\w+)$', views.Resultados.as_view(), name='resultados-por'),
     url('^proyecciones/(?P<eleccion_id>\d+)/$', views.ResultadosProyectadosEleccion.as_view(), name='proyecciones'),
+
+    url('^resultados/(?P<eleccion_id>\d+)/$', views.ResultadosEleccion.as_view(), name='resultados-eleccion'),
     url('^resultados$', views.Resultados.as_view(), name='resultados'),
 
     # url('^resultados$', views.resultados, name='resultados'),

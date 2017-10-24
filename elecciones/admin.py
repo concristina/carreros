@@ -93,15 +93,6 @@ def mostrar_resultados_escuelas(modeladmin, request, queryset):
 mostrar_resultados_escuelas.short_description = "Mostrar resultados de Escuelas seleccionadas"
 
 
-def resultados_oficiales(modeladmin, request, queryset):
-
-    selected = request.POST.getlist(admin.ACTION_CHECKBOX_NAME)
-    name = modeladmin.model.__name__.lower()
-    ids = "&".join(f'{name}={s}' for s in selected)
-    mapa_url = reverse('resultados-mapa')
-    return HttpResponseRedirect(f'{mapa_url}?{ids}')
-
-resultados_oficiales.short_description = "Ver Resultados Oficiales"
 
 
 def resultados_proyectados(modeladmin, request, queryset):
@@ -138,7 +129,7 @@ class LugarVotacionAdmin(AdminRowActionsMixin, LeafletGeoAdmin):
         'nombre', 'direccion', 'ciudad', 'barrio', 'mesas__numero'
     )
     show_full_result_count = False
-    actions = [mostrar_en_mapa, resultados_oficiales, resultados_reportados]
+    actions = [mostrar_en_mapa, resultados_reportados]
 
     def get_row_actions(self, obj):
         row_actions = [
@@ -183,7 +174,7 @@ mostrar_resultados_mesas.short_description = "Mostrar resultados de Mesas selecc
 
 
 class MesaAdmin(AdminRowActionsMixin, admin.ModelAdmin):
-    actions = [resultados_oficiales, resultados_reportados]
+    actions = [resultados_reportados]
     list_display = ('numero', 'lugar_votacion')
     list_filter = ('eleccion', TieneFiscal, TieneResultados, 'es_testigo', 'lugar_votacion__circuito__seccion', 'lugar_votacion__circuito')
     search_fields = (
@@ -241,7 +232,7 @@ class CircuitoAdmin(admin.ModelAdmin):
     search_fields = (
         'nombre', 'numero',
     )
-    actions = ['asignar', resultados_oficiales, resultados_proyectados]
+    actions = ['asignar', resultados_proyectados]
 
     def asignar(self, request, queryset):
         selected = request.POST.getlist(admin.ACTION_CHECKBOX_NAME)
@@ -252,7 +243,6 @@ class CircuitoAdmin(admin.ModelAdmin):
     asignar.short_description = "Asignar referentes"
 
 class SeccionAdmin(admin.ModelAdmin):
-    actions = [resultados_oficiales]
     search_fields = (
         'nombre', 'numero',
     )
@@ -260,7 +250,7 @@ class SeccionAdmin(admin.ModelAdmin):
 class VotoMesaReportadoAdmin(admin.ModelAdmin):
     list_display = ['mesa', 'opcion', 'votos']
     list_display_links = list_display
-    #actions = [resultados_oficiales, resultados_reportados]
+
     #list_filter = ('eleccion', TieneFiscal)
     search_fields = ['mesa__numero', 'mesa__lugar_votacion__nombre', 'mesa__lugar_votacion__ciudad']
 

@@ -305,6 +305,9 @@ class Eleccion(models.Model):
     fecha = models.DateTimeField(blank=True, null=True)
     opciones = models.ManyToManyField(Opcion, related_name='elecciones')
 
+    def get_absolute_url(self):
+        return reverse('resultados-eleccion', args=[self.slug])
+
     @classmethod
     def opciones_actuales(cls):
         e = cls.objects.filter(id=3)
@@ -328,27 +331,19 @@ class Eleccion(models.Model):
         return self.nombre
 
 
-class AbstractVotoMesa(models.Model):
+class VotoMesaReportado(models.Model):
     mesa = models.ForeignKey(Mesa)
     opcion = models.ForeignKey(Opcion)
     votos = models.PositiveIntegerField(null=True)
+    fiscal = models.ForeignKey('fiscales.Fiscal', null=True)
 
     class Meta:
-        abstract = True
-        unique_together = ('mesa', 'opcion')
+        unique_together = ('mesa', 'opcion', 'fiscal')
 
 
     def __str__(self):
         return f"{self.mesa} - {self.opcion}: {self.votos}"
 
-
-class VotoMesaReportado(AbstractVotoMesa):
-    fiscal = models.ForeignKey('fiscales.Fiscal')
-
-
-
-class VotoMesaOficial(AbstractVotoMesa):
-    pass
 
 
 @receiver(m2m_changed, sender=Circuito.referentes.through)

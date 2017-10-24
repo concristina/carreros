@@ -1,9 +1,9 @@
 {% extends "fiscales/base.html" %}
 {% load staticfiles %}
 
-{% block title %}Resultados según Fiscales{% endblock %}
+{% block title %}Resultados{% endblock %}
 
-{% block page_title %}<h5>Resultados según Fiscales</h5><h7>{{para}}</h7>{% endblock %}
+{% block page_title %}<h5>Resultados para {{para.nombre|default:para}}</h5>{% endblock %}
 
  {% block head %}
     {{ block.super }}
@@ -12,11 +12,11 @@
 
 {% block sidenav_items %}
 
-      <li><a href="{% url "resultados" %}">Provincia</a></li>
+      <li><a href="{{ request.path }}">Provincia</a></li>
 
       {% for seccion in secciones %}
 
-      <li><a href="{{ seccion.resultados_url }}">{{ seccion }}</a></li>
+      <li><a href="{{ request.path }}?seccion={{ seccion.id }}">{{ seccion }}</a></li>
       <li class="no-padding">
         <ul class="collapsible collapsible-accordion">
           <li>
@@ -24,7 +24,7 @@
             <div class="collapsible-body">
               <ul>
                 {% for circuito in seccion.circuito_set.all %}
-                    <li><a href="{{ circuito.resultados_url }}">{{ circuito }}</a></li>
+                    <li><a href="{{ request.path }}?circuito={{ circuito.id }}">{{ circuito }}</a></li>
                 {% endfor %}
               </ul>
             </div>
@@ -43,22 +43,80 @@
     <ul class="tabs">
         {% for eleccion in elecciones %}
         <li class="tab col s3" >
-            <a href="#{{eleccion.slug}}" {% if forloop.first %}class="active"{% endif %}>{{ eleccion.nombre }}</a>
+            <a target="_self" href="{{eleccion.get_absolute_url}}" {% if eleccion.id == eleccion_id %}class="active"{% endif %}>{{ eleccion.nombre }}</a>
         </li>
         {% endfor %}
     </ul>
 
-    {% for eleccion in elecciones %}
+
         <div class="card" id="{{eleccion.slug}}" data-id="{{ eleccion.id }}">
             <div class="card-content" id="frame{{eleccion.id}}">
+
+
+              <h4>Sobre un {{ resultados.porcentaje_mesas_escrutadas }}% de mesas escrutadas </h4>
+
+              {% if eleccion_id == 3 %}
+                <p>Escrutinio provisorio <strong>propio</strong> </p>
+              {% else %}
+                <p>Escrutinio provisorio <strong>oficial</strong> </p>
+              {% endif %}
+
+              <table class="striped bordered">
+                  <thead>
+                  <tr>
+                      <th>Partido</th>
+                      <th>Votos</th>
+                      <th>% (sobre total)</th>
+                      <th>% (sobre positivos)</th>
+                  </tr>
+                  </thead>
+                  {% with resultados.tabla as resultados %}
+                      {% include "elecciones/tabla_resultados_es.html" with responsive=True incluir_votos=True%}
+                  {% endwith %}
+              </table>
+
+              <div id="piechart-{{object.id}}"></div>
+
+
+
             </div>
         </div>
-    {% endfor %}
+
+
 {% endblock %}
 
 {% block right-panel %}
  <div class="card">
     <div id="metadata" class="card-content">
+
+          <table class="borderless" style="font-size: 0.7em">
+            <tr>
+                <th title="Electores"><i class="small material-icons">person_outline</i>Electores</th>
+            </tr>
+            <tr>
+                <td title="Electores">{{ resultados.electores}} </td>
+            </tr>
+            <tr>
+                <th title="Escrutados"><i class="small material-icons">person</i>Escrutados</th>
+            </tr>
+            <tr>
+                <td title="Escrutados">{{ resultados.escrutados }} </td>
+            </tr>
+            <tr>
+                <th title="Positivos"><i class="small material-icons">person_add</i>Positivos</th>
+            </tr>
+            <tr>
+
+                <td title="Positivos">{{ resultados.positivos}}</td>
+            </tr>
+            <tr>
+                <th title="% escrutado"><i class="small material-icons">timeline</i>% escrutado</th>
+            </tr>
+            <tr>
+                <td title="% escrutado">{{ resultados.porcentaje_escrutado}} %</td>
+            </tr>
+        </table>
+
 
     </div>
 </div>
@@ -74,44 +132,25 @@
 
 <script type="text/javascript">
 
-function show_content(tab){
-    var eleccion_id = tab.data('id');
-
-    $.get("/elecciones/resultados/" + eleccion_id + "/?{{request.GET.urlencode}}",
-        function(data){
-            console.log(data);
-
-            // muestra tabla
-            $("#frame" + eleccion_id).html(data.content);
-            $('#metadata').html(data.metadata);
-            // genera grafico
-
-            var data = [{
-              values: data.chart_values,
-              labels: data.chart_keys,
-              type: 'pie',
-              marker: {
-                colors: data.chart_colors
-              }
-            }];
-
-            var layout = {
-              height: 900,
-              width: 900
-            };
-
-            Plotly.newPlot('piechart-' + eleccion_id, data, layout);
-    });
-}
-
 $(function() {
-    $('ul.tabs').tabs({
-        onShow: show_content
-    });
 
+   $('tabs').tabs();
 
-    // invocar contenido de la pestaña activa por primera vez
-    show_content($($('a.active').attr('href')));
+   var data = [{
+      values: {{ chart_values|safe }},
+      labels: {{ chart_keys|safe }},
+      type: 'pie',
+      marker: {
+        colors: {{ chart_colors|safe }}
+      }
+    }];
+
+    var layout = {
+      height: 900,
+      width: 900
+    };
+
+    Plotly.newPlot('piechart-{{eleccion_id}}', data, layout);
 });
 </script>
 {% endblock messages %}

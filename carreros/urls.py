@@ -12,7 +12,7 @@ from django.contrib.auth import views as auth_views
 from fancy_cache import cache_page
 
 
-# cached = cache_page(3600)
+cached = cache_page(3600 * 24 * 30)
 
 
 urlpatterns = [
@@ -37,6 +37,8 @@ urlpatterns = [
     # url(r'^attachments/', include('attachments.urls', namespace='attachments')),
     url(r'^clasificar-actas/', include('adjuntos.urls')),
 
+    url('^resultados/(?P<slug>\w+)/$', cached(views_elecciones.ResultadosEleccion.as_view()), name='resultados-eleccion'),
+    # url('^resultados$', cached(views_elecciones.Resultados.as_view()), name='resultados'),
 ]
 
 if settings.DEBUG:
