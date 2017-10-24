@@ -255,8 +255,7 @@ class ResultadosEleccion(TemplateView):
     @classmethod
     @lru_cache(128)
     def agregaciones_por_partido(cls, eleccion):
-
-        oficiales = eleccion.id != 3
+        oficiales = True
         sum_por_partido = {}
         otras_opciones = {}
 
@@ -387,7 +386,7 @@ class ResultadosEleccion(TemplateView):
         for k, v in result.items():
 
             porcentaje_total = f'{v*100/total:.2f}' if total else '-'
-            porcentaje_positivos = f'{v*100/positivos:.2f}' if positivos else '-'
+            porcentaje_positivos = f'{v*100/positivos:.2f}' if positivos and isinstance(k, Partido) else '-'
             expanded_result[k] = (v, porcentaje_total, porcentaje_positivos)
         result = expanded_result
 
