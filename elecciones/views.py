@@ -249,7 +249,7 @@ class MapaResultadosOficiales(StaffOnlyMixing, TemplateView):
         return context
 
 
-class ResultadosEleccion(LoginRequiredMixin, TemplateView):
+class ResultadosEleccion(TemplateView):
     template_name = "elecciones/resultados.html"
 
     @classmethod
