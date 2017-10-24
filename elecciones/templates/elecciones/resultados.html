@@ -43,7 +43,7 @@
     <ul class="tabs">
         {% for eleccion in elecciones %}
         <li class="tab col s3" >
-            <a target="_self" href="{{eleccion.get_absolute_url}}" {% if eleccion.id == eleccion_id %}class="active"{% endif %}>{{ eleccion.nombre }}</a>
+            <a target="_self" href="{{eleccion.get_absolute_url}}" {% if eleccion.id == object.id %}class="active"{% endif %}>{{ eleccion.nombre }}</a>
         </li>
         {% endfor %}
     </ul>
