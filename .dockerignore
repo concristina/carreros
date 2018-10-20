@@ -1,0 +1,5 @@
+postgres/*
+nginx/*
+data/*
+venv/*
+__pycache__/*

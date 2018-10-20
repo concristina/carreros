@@ -9,6 +9,7 @@ media/*
 # data
 *.sqlite3
 fixtures/*
+data/*
 
 # C extensions
 *.so
@@ -99,6 +100,9 @@ ENV/
 # Spyder project settings
 .spyderproject
 .spyproject
+
+# vscode
+.vscode/*
 
 # Rope project settings
 .ropeproject
