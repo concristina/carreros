@@ -14,7 +14,7 @@ class Departamento(models.Model):
 class Localidad(models.Model):
     TIPO_LOCALIDAD = Choices('Urbana', 'Rural')
     nombre = models.CharField(max_length=50)
-    departamento = models.ForeignKey(Departamento)
+    departamento = models.ForeignKey(Departamento, on_delete=models.CASCADE)
     poblacion = models.PositiveIntegerField('Población')
     tipo = models.CharField(choices=TIPO_LOCALIDAD, max_length=50)
 

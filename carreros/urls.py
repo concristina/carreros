@@ -1,15 +1,16 @@
 from django.conf import settings
-from django.conf.urls.static import static
 from django.conf.urls import url, include
+from django.conf.urls.static import static
 from django.contrib import admin
-from material.frontend import urls as frontend_urls
-from elecciones import urls as elecciones_urls
-from fiscales import urls as fiscales_urls
-from fiscales.views import choice_home, QuieroSerFiscal, email, confirmar_email, exportar_emails, datos_fiscales_por_seccion
-from elecciones import views as views_elecciones
-from fiscales.forms import AuthenticationFormCustomError
 from django.contrib.auth import views as auth_views
 from fancy_cache import cache_page
+from material.frontend import urls as frontend_urls
+
+from elecciones import urls as elecciones_urls
+from elecciones import views as views_elecciones
+from fiscales import urls as fiscales_urls
+from fiscales.forms import AuthenticationFormCustomError
+from fiscales.views import choice_home, QuieroSerFiscal, email, confirmar_email, exportar_emails, datos_fiscales_por_seccion
 
 
 cached = cache_page(3600 * 24 * 30)

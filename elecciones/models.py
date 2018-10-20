@@ -16,7 +16,6 @@ from model_utils.fields import StatusField, MonitorField
 from model_utils import Choices
 
 
-
 def desde_hasta(qs):
     qs = qs.values_list('numero', flat=True).order_by('numero')
     inicio, fin = qs.first(), qs.last()
@@ -33,11 +32,9 @@ class Seccion(models.Model):
         verbose_name = 'Sección electoral'
         verbose_name_plural = 'Secciones electorales'
 
-
     def resultados_url(self):
-        #return reverse('resultados-por', args=('seccion', self.numero, slugify(self.nombre)))
-        return reverse('resultados') + f'?seccion={self.id}'
-
+        # return reverse('resultados-por', args=('seccion', self.numero, slugify(self.nombre)))
+        return reverse('resultados') + f'?seccion={self.pk}'
 
     def __str__(self):
         return f"{self.numero} - {self.nombre}"
@@ -45,8 +42,8 @@ class Seccion(models.Model):
     @property
     def electores(self):
         return Mesa.objects.filter(eleccion__id=3,
-            lugar_votacion__circuito__seccion=self,
-        ).aggregate(v=Sum('electores'))['v']
+                                   lugar_votacion__circuito__seccion=self,
+                                   ).aggregate(v=Sum('electores'))['v']
 
     @property
     def peso(self):
@@ -54,13 +51,13 @@ class Seccion(models.Model):
 
 
 class Circuito(models.Model):
-    seccion = models.ForeignKey(Seccion)
+    seccion = models.ForeignKey(Seccion, on_delete=models.CASCADE)
     numero = models.CharField(max_length=10)
     nombre = models.CharField(max_length=100)
     referentes = models.ManyToManyField('fiscales.Fiscal',
-        related_name='es_referente_de_circuito',
-        blank=True
-    )
+                                        related_name='es_referente_de_circuito',
+                                        blank=True
+                                        )
 
     class Meta:
         verbose_name = 'Circuito electoral'
@@ -73,8 +70,8 @@ class Circuito(models.Model):
     @property
     def electores(self):
         return Mesa.objects.filter(eleccion__id=3,
-            lugar_votacion__circuito=self,
-        ).aggregate(v=Sum('electores'))['v']
+                                   lugar_votacion__circuito=self,
+                                   ).aggregate(v=Sum('electores'))['v']
 
     @property
     def peso(self):
@@ -84,9 +81,8 @@ class Circuito(models.Model):
         # return reverse(
         #    'resultados-por',
         #    args=('circuito', self.numero, slugify(self.nombre))
-        #)
+        # )
         return reverse('resultados') + f'?circuito={self.id}'
-
 
     @property
     def proximo_orden_de_carga(self):
@@ -101,12 +97,14 @@ class Circuito(models.Model):
 
 
 class LugarVotacion(models.Model):
-    circuito = models.ForeignKey(Circuito, related_name='escuelas')
+    circuito = models.ForeignKey(
+        Circuito, related_name='escuelas', on_delete=models.CASCADE)
     nombre = models.CharField(max_length=100)
     direccion = models.CharField(max_length=100)
     barrio = models.CharField(max_length=100, blank=True)
     ciudad = models.CharField(max_length=100, blank=True)
-    calidad = models.CharField(max_length=20, help_text='calidad de la geolocalizacion', editable=False, blank=True)
+    calidad = models.CharField(
+        max_length=20, help_text='calidad de la geolocalizacion', editable=False, blank=True)
     electores = models.PositiveIntegerField(null=True, blank=True)
     geom = PointField(null=True)
 
@@ -118,11 +116,9 @@ class LugarVotacion(models.Model):
         verbose_name = 'Lugar de votación'
         verbose_name_plural = "Lugares de votación"
 
-
     def get_absolute_url(self):
         url = reverse('donde-fiscalizo')
         return f'{url}#donde{self.id}'
-
 
     def save(self, *args, **kwargs):
 
@@ -170,13 +166,11 @@ class LugarVotacion(models.Model):
     def mesa_testigo(self):
         return self.mesas.filter(eleccion__id=3, es_testigo=True).first()
 
-
     @property
     def resultados_oficiales(self):
         return VotoMesaOficial.objects.filter(mesa__lugar_votacion=self, opcion__id__in=Opcion.MOSTRABLES).aggregate(
             **Opcion.AGREGACIONES
         )
-
 
     def __str__(self):
         return f"{self.nombre} - {self.circuito}"
@@ -200,11 +194,12 @@ class Mesa(models.Model):
     hora_cerrada = MonitorField(monitor='estado', when=['CERRADA'])
     hora_escrutada = MonitorField(monitor='estado', when=['ESCRUTADA'])
 
-    eleccion = models.ForeignKey('Eleccion')
+    eleccion = models.ForeignKey('Eleccion', on_delete=models.CASCADE)
     numero = models.PositiveIntegerField()
     es_testigo = models.BooleanField(default=False)
-    circuito = models.ForeignKey(Circuito)  #
-    lugar_votacion = models.ForeignKey(LugarVotacion, verbose_name='Lugar de votacion', null=True, related_name='mesas')
+    circuito = models.ForeignKey(Circuito, on_delete=models.CASCADE)  #
+    lugar_votacion = models.ForeignKey(
+        LugarVotacion, verbose_name='Lugar de votacion', null=True, related_name='mesas', on_delete=models.SET_NULL)
     url = models.URLField(blank=True, help_text='url al telegrama')
     electores = models.PositiveIntegerField(null=True, blank=True)
     taken = models.DateTimeField(null=True, editable=False)
@@ -258,7 +253,6 @@ class Partido(models.Model):
     referencia = models.CharField(max_length=30, default='', blank=True)
     ordering = ['orden']
 
-
     def __str__(self):
         return self.nombre
 
@@ -266,23 +260,23 @@ class Partido(models.Model):
 class Opcion(models.Model):
     MOSTRABLES = list(range(1, 21))
     AGREGACIONES = {f'{id}': Sum(Case(When(opcion__id=id, then=F('votos')),
-                             output_field=IntegerField())) for id in MOSTRABLES}
+                                      output_field=IntegerField())) for id in MOSTRABLES}
 
     nombre = models.CharField(max_length=100)
     nombre_corto = models.CharField(max_length=10, default='')
-    partido = models.ForeignKey(Partido, null=True, blank=True, related_name='opciones')   # blanco, / recurrido / etc
+    partido = models.ForeignKey(Partido, null=True, blank=True, related_name='opciones',
+                                on_delete=models.SET_NULL)   # blanco, / recurrido / etc
     orden = models.PositiveIntegerField(
         help_text='Orden en la boleta', null=True, blank=True)
     obligatorio = models.BooleanField(default=False)
     es_contable = models.BooleanField(default=True)
-    codigo_dne = models.PositiveIntegerField(null=True, blank=True, help_text='Nº asignado en la base de datos de resultados oficiales')
-
+    codigo_dne = models.PositiveIntegerField(
+        null=True, blank=True, help_text='Nº asignado en la base de datos de resultados oficiales')
 
     class Meta:
         verbose_name = 'Opción'
         verbose_name_plural = 'Opciones'
         ordering = ['orden']
-
 
     @property
     def color(self):
@@ -290,13 +284,10 @@ class Opcion(models.Model):
             return self.partido.color or '#FFFFFF'
         return '#FFFFFF'
 
-
     def __str__(self):
         if self.partido:
             return f'{self.partido} - {self.nombre}'
         return self.nombre
-
-
 
 
 class Eleccion(models.Model):
@@ -332,18 +323,16 @@ class Eleccion(models.Model):
 
 
 class VotoMesaReportado(models.Model):
-    mesa = models.ForeignKey(Mesa)
-    opcion = models.ForeignKey(Opcion)
+    mesa = models.ForeignKey(Mesa, on_delete=models.CASCADE)
+    opcion = models.ForeignKey(Opcion, on_delete=models.CASCADE)
     votos = models.PositiveIntegerField(null=True)
-    fiscal = models.ForeignKey('fiscales.Fiscal', null=True)
+    fiscal = models.ForeignKey('fiscales.Fiscal', null=True, on_delete=models.CASCADE)
 
     class Meta:
         unique_together = ('mesa', 'opcion', 'fiscal')
 
-
     def __str__(self):
         return f"{self.mesa} - {self.opcion}: {self.votos}"
-
 
 
 @receiver(m2m_changed, sender=Circuito.referentes.through)
@@ -357,10 +346,11 @@ def referentes_cambiaron(sender, instance, action, reverse,
     if action == 'post_remove':
         # quitar a estos fiscales cualquier asignacion a escuelas del circuito
         AsignacionFiscalGeneral.objects.filter(eleccion=eleccion,
-            lugar_votacion__circuito=instance, fiscal__id__in=pk_set).delete()
+                                               lugar_votacion__circuito=instance, fiscal__id__in=pk_set).delete()
     elif action == 'post_add':
         fiscales = Fiscal.objects.filter(id__in=pk_set)
         escuelas = LugarVotacion.objects.filter(circuito=instance)
         for fiscal in fiscales:
             for escuela in escuelas:
-                AsignacionFiscalGeneral.objects.create(eleccion=eleccion, lugar_votacion=escuela, fiscal=fiscal)
+                AsignacionFiscalGeneral.objects.create(
+                    eleccion=eleccion, lugar_votacion=escuela, fiscal=fiscal)

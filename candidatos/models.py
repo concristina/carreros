@@ -19,7 +19,7 @@ class Lista(models.Model):
 class Candidato(models.Model):
     CARGOS = Choices('Diputado Nacional', 'Senador Nacional')
     TIPO = Choices('Titular', 'Suplente')
-    lista = models.ForeignKey(Lista)
+    lista = models.ForeignKey(Lista, on_delete=models.CASCADE)
     apellido = models.CharField(max_length=50)
     nombres = models.CharField(max_length=100)
     candidatura_a = models.CharField(choices=CARGOS, max_length=50, default='Diputado Nacional')
