@@ -1,10 +1,11 @@
 from django.db import models
 from django.urls import reverse
+from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
+from django.contrib.contenttypes.models import ContentType
+
 from model_utils import Choices
 from taggit.managers import TaggableManager
 
-from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
-from django.contrib.contenttypes.models import ContentType
 
 
 class DatoDeContacto(models.Model):
@@ -37,7 +38,7 @@ class Persona(models.Model):
     nombres = models.CharField(max_length=100)
     relacion = models.CharField(choices=RELACIONES, max_length=20, blank=True)
     datos_de_contacto = GenericRelation('DatoDeContacto', related_query_name='personas')
-    localidad = models.ForeignKey('geo.Localidad', null=True, blank=True)
+    localidad = models.ForeignKey('geo.Localidad', null=True, blank=True, on_delete=models.SET_NULL)
     comentarios = models.TextField(blank=True)
     fuente = models.CharField(max_length=50, blank=True)
 
@@ -64,8 +65,8 @@ class Medio(models.Model):
     )
     nombre = models.CharField('Nombre del medio', max_length=50)
     tipo = models.CharField(choices=TIPO_DE_MEDIO, max_length=50)
-    direccion = models.CharField('Dirección', max_length=50, blank=True)
-    localidad = models.ForeignKey('geo.Localidad', blank=True, null=True)
+    direccion = models.CharField('Dirección', max_length=50, blank=True, null=True)
+    localidad = models.ForeignKey('geo.Localidad', blank=True, null=True, on_delete=models.SET_NULL)
     datos_de_contacto = GenericRelation(DatoDeContacto, related_query_name='medios')
     detalles_tecnicos = models.TextField(blank=True)
     fuente = models.CharField(max_length=50, blank=True)
@@ -80,15 +81,15 @@ class Medio(models.Model):
 
 class Rol(models.Model):
     ROLES = Choices('Conductor/a', 'Periodista', 'Productor/a', 'Técnico/a', 'Contacto')
-    persona = models.ForeignKey('Persona')
-    programa = models.ForeignKey('Programa')
+    persona = models.ForeignKey('Persona', on_delete=models.CASCADE)
+    programa = models.ForeignKey('Programa', on_delete=models.CASCADE)
     rol = models.CharField(choices=ROLES, max_length=50, blank=True)
     es_contacto = models.BooleanField(default=False)
 
 
 class Programa(models.Model):
     nombre = models.CharField('Nombre del programa o sección', max_length=150)
-    medio = models.ForeignKey('Medio', related_name='programas')
+    medio = models.ForeignKey('Medio', related_name='programas', on_delete=models.CASCADE)
     staff = models.ManyToManyField('Persona', related_name='programas_realizados', through='Rol')
 
     # TODO ver django-scheduler u otra app para modelar la recurrencia
@@ -108,7 +109,7 @@ class Programa(models.Model):
 
 
 class Aparicion(models.Model):
-    programa = models.ForeignKey('Programa')
+    programa = models.ForeignKey('Programa', on_delete=models.CASCADE)
     candidatos = models.ManyToManyField('candidatos.Candidato', related_name='apariciones_en_medios')
     fecha = models.DateTimeField()
     minuta = models.TextField(help_text='Qué se dijo/mostró?', blank=True)

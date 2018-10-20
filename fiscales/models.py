@@ -17,10 +17,10 @@ from model_utils.fields import StatusField
 from model_utils import Choices
 
 
-
 class Organizacion(models.Model):
     nombre = models.CharField(max_length=100)
-    referentes = models.ManyToManyField('Fiscal', related_name='es_referente_de_orga', blank=True)
+    referentes = models.ManyToManyField(
+        'Fiscal', related_name='es_referente_de_orga', blank=True)
 
     class Meta:
         verbose_name = 'Organización'
@@ -30,17 +30,20 @@ class Organizacion(models.Model):
         return self.nombre
 
 
-
 class Fiscal(models.Model):
     TIPO = Choices(('general', 'General'), ('de_mesa', 'de Mesa'))
     TIPO_DNI = Choices('DNI', 'CI', 'LE', 'LC')
-    ESTADOS = Choices('IMPORTADO', 'AUTOCONFIRMADO', 'PRE-INSCRIPTO', 'CONFIRMADO', 'DECLINADO')
+    ESTADOS = Choices('IMPORTADO', 'AUTOCONFIRMADO',
+                      'PRE-INSCRIPTO', 'CONFIRMADO', 'DECLINADO')
     DISPONIBILIDAD = Choices('mañana', 'tarde', 'todo el día')
 
     estado = StatusField(choices_name='ESTADOS', default='PRE-INSCRIPTO')
-    notas = models.TextField(blank=True, help_text='Notas internas, no se muestran')
-    escuela_donde_vota = models.ForeignKey('elecciones.LugarVotacion', verbose_name='Escuela preferida para fiscalizar', null=True, blank=True)
-    disponibilidad = models.CharField(choices=DISPONIBILIDAD, max_length=20, blank=True)
+    notas = models.TextField(
+        blank=True, help_text='Notas internas, no se muestran')
+    escuela_donde_vota = models.ForeignKey(
+        'elecciones.LugarVotacion', verbose_name='Escuela preferida para fiscalizar', null=True, blank=True, on_delete=models.SET_NULL)
+    disponibilidad = models.CharField(
+        choices=DISPONIBILIDAD, max_length=20, blank=True)
     movilidad = models.NullBooleanField(help_text='Movilidad propia')
     tipo = models.CharField(choices=TIPO, max_length=20)
     codigo_confirmacion = models.UUIDField(default=uuid.uuid4, editable=False)
@@ -52,12 +55,13 @@ class Fiscal(models.Model):
     localidad = models.CharField(max_length=200, blank=True)
     tipo_dni = models.CharField(choices=TIPO_DNI, max_length=3, default='DNI')
     dni = models.CharField(max_length=15, blank=True, null=True)
-    datos_de_contacto = GenericRelation('prensa.DatoDeContacto', related_query_name='fiscales')
-    organizacion = models.ForeignKey('Organizacion', null=True, blank=True, help_text='Opcional. Para mostrar contactos extra del usuario')
+    datos_de_contacto = GenericRelation(
+        'prensa.DatoDeContacto', related_query_name='fiscales')
+    organizacion = models.ForeignKey('Organizacion', null=True, blank=True,
+                                     help_text='Opcional. Para mostrar contactos extra del usuario', on_delete=models.SET_NULL)
     user = models.OneToOneField('auth.User', null=True,
-                    blank=True, related_name='fiscal',
-                    on_delete=models.SET_NULL)
-
+                                blank=True, related_name='fiscal',
+                                on_delete=models.SET_NULL)
 
     class Meta:
         verbose_name_plural = 'Fiscales'
@@ -66,9 +70,11 @@ class Fiscal(models.Model):
     def agregar_dato_de_contacto(self, tipo, valor):
         type_ = ContentType.objects.get_for_model(self)
         try:
-            DatoDeContacto.objects.get(content_type__pk=type_.id, object_id=self.id, tipo=tipo, valor=valor)
+            DatoDeContacto.objects.get(
+                content_type__pk=type_.id, object_id=self.id, tipo=tipo, valor=valor)
         except DatoDeContacto.DoesNotExist:
-            DatoDeContacto.objects.create(content_object=self, tipo=tipo, valor=valor)
+            DatoDeContacto.objects.create(
+                content_object=self, tipo=tipo, valor=valor)
 
     @property
     def es_general(self):
@@ -117,9 +123,11 @@ class Fiscal(models.Model):
     @property
     def asignacion(self):
         if self.es_general:
-            qs = AsignacionFiscalGeneral.objects.filter(fiscal=self, eleccion__id=3)
+            qs = AsignacionFiscalGeneral.objects.filter(
+                fiscal=self, eleccion__id=3)
         else:
-            qs = AsignacionFiscalDeMesa.objects.filter(fiscal=self, mesa__eleccion__id=3)
+            qs = AsignacionFiscalDeMesa.objects.filter(
+                fiscal=self, mesa__eleccion__id=3)
         return qs.last()
 
     @property
@@ -127,7 +135,6 @@ class Fiscal(models.Model):
         if self.asignacion:
             return f'{self} (asignado a {self.asignacion.asignable})'
         return f'{self}'
-
 
     def asignar_a(self, asignable):
         if isinstance(asignable, Mesa):
@@ -146,16 +153,16 @@ class Fiscal(models.Model):
     def direccion_completa(self):
         return f'{self.direccion} {self.barrio}, {self.localidad}'
 
-
     def fiscales_colegas(self):
         """fiscales en la misma escuela"""
         escuelas = self.escuelas.all()
         if escuelas:
-            general = Q(tipo='general') & Q(asignacion_escuela__lugar_votacion__in=escuelas)
-            de_mesa = Q(tipo='de_mesa') & Q(asignacion_mesa__mesa__lugar_votacion__in=escuelas)
+            general = Q(tipo='general') & Q(
+                asignacion_escuela__lugar_votacion__in=escuelas)
+            de_mesa = Q(tipo='de_mesa') & Q(
+                asignacion_mesa__mesa__lugar_votacion__in=escuelas)
             return Fiscal.objects.exclude(id=self.id).filter(general | de_mesa).order_by('-tipo')
         return Fiscal.objects.none()
-
 
     def referentes_de_circuito(self):
         if self.circuitos:
@@ -164,7 +171,8 @@ class Fiscal(models.Model):
 
     def referentes_de_orga(self):
         if self.organizacion:
-            Fiscal.objects.exclude(id=self.id).filter(es_referente_de_orga=self.organizacion)
+            Fiscal.objects.exclude(id=self.id).filter(
+                es_referente_de_orga=self.organizacion)
         return Fiscal.objects.none()
 
     @property
@@ -179,7 +187,8 @@ class AsignacionFiscal(TimeStampedModel):
     ESTADOS_COMIDA = Choices('no asignada', 'asignada', 'recibida')
     ingreso = models.DateTimeField(null=True, editable=False)
     egreso = models.DateTimeField(null=True, editable=False)
-    comida = models.CharField(choices=ESTADOS_COMIDA, max_length=50, default='no asignada')
+    comida = models.CharField(choices=ESTADOS_COMIDA,
+                              max_length=50, default='no asignada')
 
     @property
     def esta_presente(self):
@@ -195,14 +204,14 @@ class AsignacionFiscalDeMesa(AsignacionFiscal):
     mesa = models.ForeignKey(
         'elecciones.Mesa',
         limit_choices_to={'eleccion__id': 3},
-        related_name='asignacion'
+        related_name='asignacion',
+        on_delete=models.CASCADE
     )
 
     # es null si el fiscal general dice que la mesa está asignada
     # pero aun no hay datos.
-    fiscal = models.ForeignKey('Fiscal', null=True, blank=True,
-        limit_choices_to={'tipo': Fiscal.TIPO.de_mesa}, related_name='asignacion_mesa')
-
+    fiscal = models.ForeignKey('Fiscal', null=True, blank=True, on_delete=models.SET_NULL,
+                               limit_choices_to={'tipo': Fiscal.TIPO.de_mesa}, related_name='asignacion_mesa')
 
     @property
     def asignable(self):
@@ -220,15 +229,17 @@ class AsignacionFiscalDeMesa(AsignacionFiscal):
 
 class AsignacionFiscalGeneral(AsignacionFiscal):
     lugar_votacion = models.ForeignKey(
-        'elecciones.LugarVotacion', related_name='asignacion')
+        'elecciones.LugarVotacion', related_name='asignacion', on_delete=models.CASCADE)
     eleccion = models.ForeignKey('elecciones.Eleccion',
-        limit_choices_to={'id': 3},
-        default=3,
-    )
+                                 limit_choices_to={'id': 3},
+                                 default=3,
+                                 on_delete=models.CASCADE
+                                 )
     fiscal = models.ForeignKey('Fiscal',
-        limit_choices_to={'tipo': Fiscal.TIPO.general},
-        related_name='asignacion_escuela'
-    )
+                               limit_choices_to={'tipo': Fiscal.TIPO.general},
+                               related_name='asignacion_escuela',
+                               on_delete=models.CASCADE
+                               )
 
     @property
     def asignable(self):
@@ -288,7 +299,6 @@ def fiscal_contacto(sender, instance=None, created=False, **kwargs):
         user = instance.content_object.user
         user.email = instance.valor
         user.save(update_fields=['email'])
-
 
 
 @receiver(pre_delete, sender=Fiscal)

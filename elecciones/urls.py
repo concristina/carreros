@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 from django.conf.urls import url
-from . import views
 from fancy_cache import cache_page
+
+from . import views
 
 
 cached = cache_page(600)

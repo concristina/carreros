@@ -1,7 +1,7 @@
+from urllib.parse import quote_plus
 from django.db import models
 from django.dispatch import receiver
 from django.db.models.signals import post_save
-from urllib.parse import quote_plus
 from model_utils import Choices
 from versatileimagefield.fields import VersatileImageField
 
@@ -43,7 +43,7 @@ class Attachment(models.Model):
         'foto rotada',
     )
 
-    email = models.ForeignKey('Email', null=True)
+    email = models.ForeignKey('Email', null=True, on_delete=models.CASCADE)
     mimetype = models.CharField(max_length=100, null=True)
     foto = VersatileImageField(upload_to='attachments/',
         null=True, blank=True,
@@ -60,7 +60,7 @@ class Attachment(models.Model):
         blank=True,
         null=True
     )
-    mesa = models.OneToOneField('elecciones.Mesa', null=True, related_name='attachment')
+    mesa = models.OneToOneField('elecciones.Mesa', null=True, related_name='attachment', on_delete=models.CASCADE)
     taken = models.DateTimeField(null=True)
     problema = models.CharField(max_length=100, null=True, blank=True, choices=PROBLEMAS)
 
