@@ -43,10 +43,11 @@
 
 
         <li>
-            <a href="{% url "resultados-eleccion" "generales2017" %}" class="collapsible-header" data-turbolinks="false">Resultados<i class="material-icons">pie_chart</i></a>
+            <a href="{% url "resultados-eleccion" "gobernador-2019" %}" class="collapsible-header" data-turbolinks="false">Resultados<i class="material-icons">pie_chart</i></a>
         </li>
 
 
+        {% comment %}
 
         {% url 'mis-datos' as url %}
         <li {% if url in request.path %} class="active"{% endif %}>
@@ -74,7 +75,7 @@
         </li>
         {% endblock donde %}
 
-
+        {% endcomment %}
 
         <li>
             <a href="{% url 'logout' %}" class="collapsible-header"  data-turbolinks="false">Cerrar sesión<i class="material-icons">exit_to_app</i></a>
