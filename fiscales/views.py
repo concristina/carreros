@@ -113,7 +113,6 @@ class QuieroSerFiscal(SessionWizardView):
                 'disponibilidad': fiscal.disponibilidad,
                 'movilidad': fiscal.movilidad,
                 'seccion': fiscal.escuelas[0].circuito.seccion if fiscal.escuelas else None
-
             }
         elif step == '2' and fiscal:
             seccion = self.get_cleaned_data_for_step('1')['seccion']
@@ -144,6 +143,7 @@ class QuieroSerFiscal(SessionWizardView):
 
     def get_form(self, step=None, data=None, files=None):
         form = super().get_form(step, data, files)
+        #import ipdb; ipdb.set_trace()
 
         # determine the step if not given
         if step is None:
@@ -185,9 +185,9 @@ class QuieroSerFiscal(SessionWizardView):
         body_text = html2text(body_html)
 
         send_mail(
-            'Recibimos tu inscripción como fiscal',
+            '[NOREPLY] Recibimos tu inscripción como fiscales',
             body_text,
-            'info@cordobaciudadana.org',
+            'elecciones_neuquen@cba3.com.ar',
             [email],
             fail_silently=False,
             html_message=body_html
@@ -205,8 +205,8 @@ def confirmar_email(request, uuid):
                           'Por favor copiá y pegá el link que te enviamos'
                           ' por email en la barra de direcciones'
                           'Si seguís con problemas, env '
-                          '<a href="mailto:fiscales@cordobaciudadana.org">'
-                          'fiscales@cordobaciudadana.org</a>')
+                          '<a href="mailto:elecciones_neuquen@cba3.com.ar">'
+                          'elecciones_neuquen@cba3.com.ar</a>')
 
     elif fiscal.email_confirmado:
         texto = 'Tu email ya estaba confirmado. Gracias.'

@@ -123,7 +123,8 @@ class QuieroSerFiscal2(forms.ModelForm):
         help_text='Marcá la casilla si tenés cómo movilizarte el día de la elección'
     )
     seccion = forms.ModelChoiceField(label='Sección electoral', queryset=Seccion.objects.all(),
-        help_text=mark_safe(f'Sección/departamento donde votás y/o preferís fiscalizar. {LINK}')
+        help_text=mark_safe(f'Sección/departamento donde votás y/o preferís fiscalizar. {LINK}'), 
+        required=False
     )
 
     layout = Layout(Row('nombre', 'apellido'),
@@ -150,7 +151,8 @@ class QuieroSerFiscal2(forms.ModelForm):
 
 class QuieroSerFiscal3(forms.Form):
     circuito = forms.ModelChoiceField(queryset=Circuito.objects.all(),
-        help_text=mark_safe(f'Circuito/zona donde votás y/o preferís fiscalizar. {LINK}')
+        help_text=mark_safe(f'Circuito/zona donde votás y/o preferís fiscalizar. {LINK}'),
+        required=False
     )
 
 
@@ -160,7 +162,8 @@ class QuieroSerFiscal4(forms.Form):
     }
 
     escuela = forms.ModelChoiceField(queryset=LugarVotacion.objects.all(),
-        help_text=mark_safe(f'Escuela donde votás y/o preferís fiscalizar. {LINK}')
+        help_text=mark_safe(f'Escuela donde votás y/o preferís fiscalizar. {LINK}'),
+        required=False
     )
     new_password1 = forms.CharField(
         label=_("New password"),

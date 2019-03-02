@@ -302,7 +302,7 @@ class Opcion(models.Model):
 
     def __str__(self):
         if self.partido:
-            return f'{self.nombre} {self.partido}'
+            return f'{self.codigo_dne} - {self.nombre}' #  -- {self.partido.nombre_corto}
         return self.nombre
 
 

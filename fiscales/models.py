@@ -194,7 +194,7 @@ class AsignacionFiscal(TimeStampedModel):
 class AsignacionFiscalDeMesa(AsignacionFiscal):
     mesa = models.ForeignKey(
         'elecciones.Mesa',
-        limit_choices_to={'eleccion__id': 3},
+        limit_choices_to={'eleccion__id': 1},
         related_name='asignacion'
     )
 
@@ -222,8 +222,8 @@ class AsignacionFiscalGeneral(AsignacionFiscal):
     lugar_votacion = models.ForeignKey(
         'elecciones.LugarVotacion', related_name='asignacion')
     eleccion = models.ForeignKey('elecciones.Eleccion',
-        limit_choices_to={'id': 3},
-        default=3,
+        limit_choices_to={'id': 1},
+        default=1,
     )
     fiscal = models.ForeignKey('Fiscal',
         limit_choices_to={'tipo': Fiscal.TIPO.general},

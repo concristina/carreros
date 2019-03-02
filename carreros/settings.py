@@ -204,7 +204,7 @@ ANYMAIL = {
 }
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # EMAIL_BACKEND = "anymail.backends.mailgun.EmailBackend"  # or sendgrid.EmailBackend, or...
-DEFAULT_FROM_EMAIL = "info@cordobaciudadana.org"         # if you don't already have this in settings
+DEFAULT_FROM_EMAIL = "elecciones_neuquen@cba3.com.ar"         # if you don't already have this in settings
 
 
 CACHES = {

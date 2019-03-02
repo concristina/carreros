@@ -8,7 +8,6 @@
                 <div class="card-content">
 
 
-                {% comment %}
 
                     <span class="card-title grey-text text-darken-2">Paso {{ wizard.steps.step1 }} de {{ wizard.steps.count }}</span>
                     {{ wizard.management_form }}
@@ -22,13 +21,13 @@
                         {% form form=wizard.form %}{% endform %}
                     {% endif %}
 
-                     {% endcomment %}
 
+                    {% comment %}
 
                      <p>La inscripción de fiscales ha concluído. Gracias por tu interés y esperamos tu apoyo el domingo!</p>
+                     {% endcomment %}
 
                 </div>
-                {% comment %}
 
                 <div class="card-action right-align">
                     {% if wizard.steps.prev %}
@@ -44,7 +43,6 @@
 
                     </button>
                 </div>
-                {% endcomment %}
             </form>
         </div>
 
