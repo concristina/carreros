@@ -71,7 +71,7 @@ class Attachment(models.Model):
 
 
 @receiver(post_save, sender=Attachment)
-def asignar_order_de_carga(sender, instance=None, created=False, **kwargs):
+def asignar_orden_de_carga(sender, instance=None, created=False, **kwargs):
     """
     cuando se clasifica el attach, se le asigna el orden siguiente del circuito
     """

@@ -43,7 +43,10 @@ from prensa.views import ConContactosMixin
 from adjuntos.models import Attachment
 from adjuntos.forms import SubirAttachmentModelForm
 
+# tiempo maximo en minutos que se mantiene la asignacion de un acta hasta ser reasignada
+# es para que alguien no se "cuelgue" y quede un acta sin cargar.
 WAITING_FOR = 2
+
 
 def choice_home(request):
     """
@@ -588,17 +591,25 @@ class MesaDetalle(LoginRequiredMixin, MiAsignableMixin, DetailView):
 
 
 @staff_member_required
-def elegir_acta_a_cargar(request):
+def elegir_acta_a_cargar(request, eleccion_id=None):
+
+
     now = timezone.now()
     desde = now - timedelta(minutes=WAITING_FOR)
     # se eligen mesas que nunca se intentaron cargar o que se asignaron a
-    # hace más de 3 minutos
+
     mesas = Mesa.objects.filter(
-        eleccion__id=3,
         votomesareportado__isnull=True,
         attachment__isnull=False,
         orden_de_carga__gte=1
-    ).filter(Q(taken__isnull=True) | Q(taken__lt=desde)
+    )
+
+    if eleccion_id:
+        # si se limita a una eleccion particular se elige desde acá.
+        mesas = mesas.filter(eleccion_id=eleccion_id)
+
+    mesas = mesas.filter(
+        Q(taken__isnull=True) | Q(taken__lt=desde)
     ).order_by('orden_de_carga')
     if mesas.exists():
         mesa = mesas[0]

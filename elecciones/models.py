@@ -26,7 +26,8 @@ def desde_hasta(qs):
 
 
 class Seccion(models.Model):
-    numero = models.PositiveIntegerField()
+    # O departamento
+    numero = models.PositiveIntegerField(null=True)
     nombre = models.CharField(max_length=100)
 
     class Meta:
@@ -53,8 +54,18 @@ class Seccion(models.Model):
         return self.electores / Eleccion.actual().electores
 
 
+class SeccionDePonderacion(models.Model):
+    # una agrupacion de circuitos interna
+    numero = models.PositiveIntegerField()
+    nombre = models.CharField(max_length=100)
+    seccion = models.ForeignKey(Seccion)
+
+
 class Circuito(models.Model):
     seccion = models.ForeignKey(Seccion)
+    seccion_de_ponderacion = models.ForeignKey(SeccionDePonderacion, null=True)
+    localidad_cabecera = models.CharField(max_length=100, null=True, blank=True)
+
     numero = models.CharField(max_length=10)
     nombre = models.CharField(max_length=100)
     referentes = models.ManyToManyField('fiscales.Fiscal',
@@ -253,7 +264,7 @@ class Partido(models.Model):
     orden = models.PositiveIntegerField(help_text='Orden opcion')
     numero = models.PositiveIntegerField(null=True, blank=True)
     nombre = models.CharField(max_length=100)
-    nombre_corto = models.CharField(max_length=10, default='')
+    nombre_corto = models.CharField(max_length=30, default='')
     color = models.CharField(max_length=30, default='', blank=True)
     referencia = models.CharField(max_length=30, default='', blank=True)
     ordering = ['orden']
