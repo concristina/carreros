@@ -54,16 +54,14 @@ class Seccion(models.Model):
         return self.electores / Eleccion.actual().electores
 
 
-class SeccionDePonderacion(models.Model):
+class AgrupacionPK(models.Model):
     # una agrupacion de circuitos interna
     numero = models.PositiveIntegerField()
     nombre = models.CharField(max_length=100)
-    seccion = models.ForeignKey(Seccion)
-
 
 class Circuito(models.Model):
     seccion = models.ForeignKey(Seccion)
-    seccion_de_ponderacion = models.ForeignKey(SeccionDePonderacion, null=True)
+    seccion_de_ponderacion = models.ForeignKey(AgrupacionPK, null=True)
     localidad_cabecera = models.CharField(max_length=100, null=True, blank=True)
 
     numero = models.CharField(max_length=10)
