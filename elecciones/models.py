@@ -304,7 +304,7 @@ class Opcion(models.Model):
 
     def __str__(self):
         if self.partido:
-            return f'{self.partido} - {self.nombre}'
+            return f'{self.nombre} {self.partido}'
         return self.nombre
 
 
@@ -321,14 +321,14 @@ class Eleccion(models.Model):
 
     @classmethod
     def opciones_actuales(cls):
-        e = cls.objects.filter(id=3)
+        e = cls.objects.filter(id=1)
         if e.exists():
             return e.first().opciones.order_by('orden')
         return Opcion.objects.none()
 
     @classmethod
     def actual(cls):
-        return cls.objects.get(id=3)
+        return cls.objects.get(id=1)
 
     @property
     def electores(self):

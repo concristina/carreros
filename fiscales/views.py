@@ -653,7 +653,6 @@ def cargar_resultados(request, eleccion_id, mesa_numero):
     formset = VotoMesaReportadoFormset(data, queryset=qs, initial=initial)
 
     fix_opciones(formset)
-
     is_valid = False
     if qs:
         formset.convert_warnings = True  # monkepatch

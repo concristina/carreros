@@ -15,6 +15,7 @@ WAITING_FOR = 2   # 3 minutos
 
 @staff_member_required
 def elegir_adjunto(request):
+    import ipdb; ipdb.set_trace()
     now = timezone.now()
     desde = now - timedelta(minutes=WAITING_FOR)
 
@@ -41,13 +42,11 @@ class AsignarMesaAdjunto(StaffOnlyMixing, UpdateView):
     pk_url_kwarg = 'attachment_id'
     model = Attachment
 
-    def dispatch(self, *args, **kwargs):
-        return super().dispatch(*args, **kwargs)
-
     def get_success_url(self):
         return reverse('elegir-adjunto')
 
     def get_context_data(self, **kwargs):
+        import ipdb; ipdb.set_trace()
         context = super().get_context_data(**kwargs)
         context['attachment'] = self.object
         context['button_tabindex'] = 2

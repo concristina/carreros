@@ -74,7 +74,7 @@ class LugarVotacionFactory(DjangoModelFactory):
 class MesaFactory(DjangoModelFactory):
     class Meta:
         model = 'elecciones.Mesa'
-    eleccion = factory.SubFactory(EleccionFactory, id=3)
+    eleccion = factory.SubFactory(EleccionFactory, id=1)
     numero = factory.Sequence(lambda n: n + 1)
     lugar_votacion = factory.SubFactory(LugarVotacionFactory)
     circuito = factory.LazyAttribute(lambda obj: obj.lugar_votacion.circuito)
@@ -108,7 +108,7 @@ class AsignacionFiscalGeneralFactory(DjangoModelFactory):
     class Meta:
         model = 'fiscales.AsignacionFiscalGeneral'
     lugar_votacion = factory.SubFactory(LugarVotacionFactory)
-    eleccion = factory.SubFactory(EleccionFactory, id=3)
+    eleccion = factory.SubFactory(EleccionFactory, id=1)
     fiscal = factory.SubFactory(FiscalGeneralFactory)
 
 

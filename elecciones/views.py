@@ -25,7 +25,7 @@ from .models import LugarVotacion, Circuito
 
 
 POSITIVOS = 'TOTAL DE VOTOS AGRUPACIONES POLÍTICAS'
-TOTAL = 'TOTAL DE VOTOS'
+TOTAL = 'Total General'
 
 class StaffOnlyMixing:
 
@@ -479,7 +479,7 @@ class ResultadosProyectadosEleccion(StaffOnlyMixing, TemplateView):
     @property
     @lru_cache(128)
     def mesas(self):
-        return Mesa.objects.filter(eleccion_id=3).order_by("numero")
+        return Mesa.objects.filter(eleccion_id=1).order_by("numero")
 
     @property
     @lru_cache(128)
@@ -555,7 +555,7 @@ class ResultadosProyectadosEleccion(StaffOnlyMixing, TemplateView):
         context = super().get_context_data(**kwargs)
 
         context['para'] = 'Córdoba'
-        context['eleccion'] = Eleccion.objects.filter(id=3)
+        context['eleccion'] = Eleccion.objects.filter(id=1)
         context['filas_tabla'] = self.filas_tabla
 
         context['total_electores'] = sum([rg["electores"] for rg in context['filas_tabla']])

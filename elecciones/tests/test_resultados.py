@@ -53,8 +53,8 @@ def url_resultados(carta_marina):
 
 def test_total_electores_en_eleccion(carta_marina):
     # la sumatoria de todas las mesas de la eleccion
-    # nota: el factory de mesa indirectamente crea la eleccion con id=3 que es actual()
-    assert Eleccion.objects.get(id=3).electores == 800
+    # nota: el factory de mesa indirectamente crea la eleccion con id=1 que es actual()
+    assert Eleccion.objects.get(id=1).electores == 800
 
 
 def test_electores_filtro_mesa(url_resultados, fiscal_client):
@@ -103,7 +103,7 @@ def test_resultados_parciales(carta_marina, fiscal_client):
     # resultados para mesa 1
     m1, _, m3, *_ = carta_marina
     url = reverse('resultados-eleccion', args=[3])
-    eleccion = Eleccion.objects.get(id=3)
+    eleccion = Eleccion.objects.get(id=1)
     o1, o2, o3 = eleccion.opciones.filter(partido__isnull=False)
     total = eleccion.opciones.get(nombre=TOTAL)
     pos = eleccion.opciones.get(nombre=POSITIVOS)

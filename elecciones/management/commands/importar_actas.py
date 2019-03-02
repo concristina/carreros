@@ -7,10 +7,8 @@ from elecciones.management.commands.importar_carta_marina import CarrerosBaseCom
 
 
 
-
-
 class Command(CarrerosBaseCommand):
-    help = "Importa adjunto del email resultados@cordobaciudadana.org"
+    help = "Importa adjunto del email {}".format(settings.IMAP_ACCOUNT)
 
     def add_arguments(self, parser):
         parser.add_argument(

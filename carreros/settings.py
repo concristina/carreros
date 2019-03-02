@@ -216,6 +216,7 @@ CACHES = {
 }
 
 # config para el comando importar_actas
+IMAP_ACCOUNT = 'neuquen@cba3.com.ar'
 IMAP_HOST = 'imap.gmail.com'
 IMAP_USERNAME = 'foo@bar.com'
 IMAP_PASSWORD = '***'

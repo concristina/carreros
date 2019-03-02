@@ -211,32 +211,30 @@ class BaseVotoMesaReportadoFormSet(BaseModelFormSet):
     def clean(self):
         super().clean()
         suma = 0
+        positivos = 0
+        total = 0
         for form in self.forms:
             opcion = form.cleaned_data['opcion']
 
             if opcion.nombre == TOTAL:
                 form_opcion_total = form
                 total = form.cleaned_data.get('votos') or 0
-            elif opcion.nombre == POSITIVOS:
-                form_opcion_positivos = form
-                positivos = form.cleaned_data.get('votos') or 0
-
             else:
                 suma += form.cleaned_data.get('votos') or 0
 
-        if suma > positivos:
-            #form_opcion_total.add_error(
-            #    'votos', 'La sumatoria no se corresponde con el total'
-            #)
-            form_opcion_positivos.add_error('votos',
-                f'Positivos deberia ser igual o mayor a {suma}')
+        # if suma > positivos:
+        #     #form_opcion_total.add_error(
+        #     #    'votos', 'La sumatoria no se corresponde con el total'
+        #     #)
+        #     form_opcion_positivos.add_error('votos',
+        #         f'Positivos deberia ser igual o mayor a {suma}')
 
-        if positivos > total:
+        if suma > total:
             # form_opcion_total.add_error(
             #    'votos', 'El total no corresponde a la cantidad de sobres'
             # )
             form_opcion_total.add_error('votos',
-                f'Total deberia ser igual o mayor a {positivos}')
+                f'Total deberia ser igual a {suma}')
 
 
 VotoMesaReportadoFormset = modelformset_factory(
