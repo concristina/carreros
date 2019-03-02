@@ -348,7 +348,7 @@ class ResultadosEleccion(TemplateView):
 
 
         mesas_escrutadas = Mesa.objects.filter(votomesareportado__in=reportados).distinct().count()
-        total_mesas = Mesa.objects.filter(lookups2, eleccion__id=3).count()
+        total_mesas = Mesa.objects.filter(lookups2, eleccion__id=1).count()
         porcentaje_mesas_escrutadas = f'{mesas_escrutadas*100/total_mesas:.2f}'
 
 

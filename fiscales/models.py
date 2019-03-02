@@ -105,10 +105,10 @@ class Fiscal(models.Model):
         if self.es_general:
             return LugarVotacion.objects.filter(
                 asignacion__fiscal=self,
-                asignacion__eleccion__id=3
+                asignacion__eleccion__id=1
             ).distinct()
         else:
-            return LugarVotacion.objects.filter(mesas__eleccion__id=3, mesas__asignacion__fiscal=self).distinct()
+            return LugarVotacion.objects.filter(mesas__eleccion__id=1, mesas__asignacion__fiscal=self).distinct()
 
     @property
     def circuitos(self):
@@ -117,9 +117,9 @@ class Fiscal(models.Model):
     @property
     def asignacion(self):
         if self.es_general:
-            qs = AsignacionFiscalGeneral.objects.filter(fiscal=self, eleccion__id=3)
+            qs = AsignacionFiscalGeneral.objects.filter(fiscal=self, eleccion__id=1)
         else:
-            qs = AsignacionFiscalDeMesa.objects.filter(fiscal=self, mesa__eleccion__id=3)
+            qs = AsignacionFiscalDeMesa.objects.filter(fiscal=self, mesa__eleccion__id=1)
         return qs.last()
 
     @property
