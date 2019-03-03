@@ -78,10 +78,9 @@
 {% endblock left-panel %}
 
 {% block right-panel %}
-    <div class="card">
+    <div class="card" style="position: fixed;">
 
-
-        <div class="card-content">
+        <div class="card-content" >
            <a href="{{ attachment.foto.url }}">ampliar</a>
            <img class="responsive-img" src="{{ attachment.foto.thumbnail.960x.url }}">
         </div>
