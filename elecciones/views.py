@@ -135,7 +135,7 @@ class MapaResultadosOficiales(StaffOnlyMixing, TemplateView):
             sum_por_partido[str(id)] = Sum(Case(When(opcion__partido__id=id, then=F('votos')),
                                                 output_field=IntegerField()))
 
-        for nombre, id in Opcion.objects.filter(id__in=[16, 17, 18, 19]).values_list('nombre', 'id'):
+        for nombre, id in Opcion.objects.filter(opcion__partido__isnull=True).values_list('nombre', 'id'):
             otras_opciones[nombre] = Sum(Case(When(opcion__id=id, then=F('votos')),
                                               output_field=IntegerField()))
 
@@ -253,24 +253,22 @@ class ResultadosEleccion(TemplateView):
     template_name = "elecciones/resultados.html"
 
     @classmethod
-    @lru_cache(128)
     def agregaciones_por_partido(cls, eleccion):
         oficiales = True
         sum_por_partido = {}
         otras_opciones = {}
 
         for id in Partido.objects.filter(opciones__elecciones__id=eleccion.id).distinct().values_list('id', flat=True):
-            sum_por_partido[str(id)] = Sum(Case(When(opcion__partido__id=id, fiscal__isnull=oficiales, then=F('votos')),
+            sum_por_partido[str(id)] = Sum(Case(When(opcion__partido__id=id, then=F('votos')),
                                                 output_field=IntegerField()))
 
         for nombre, id in Opcion.objects.filter(elecciones__id=eleccion.id, partido__isnull=True).values_list('nombre', 'id'):
-            otras_opciones[nombre] = Sum(Case(When(opcion__id=id, fiscal__isnull=oficiales, then=F('votos')),
+            otras_opciones[nombre] = Sum(Case(When(opcion__id=id, then=F('votos')),
                                               output_field=IntegerField()))
 
         return sum_por_partido, otras_opciones
 
     @property
-    @lru_cache(128)
     def filtros(self):
         """a partir de los argumentos de urls, devuelve
         listas de seccion / circuito etc. para filtrar """
@@ -337,7 +335,6 @@ class ResultadosEleccion(TemplateView):
             elif 'mesa' in self.request.GET:
                 lookups = Q(mesa__id__in=self.filtros)
                 lookups2 = Q(id__in=self.filtros)
-
 
         electores = self.electores(eleccion)
         # primero para partidos
@@ -422,7 +419,7 @@ class ResultadosEleccion(TemplateView):
         context['chart_keys'] = [v['key'] for v in chart]
         context['chart_colors'] = [v['color'] for v in chart]
 
-        context['elecciones'] = (Eleccion.objects.get(id=i) for i in [3, 1, 2])
+        context['elecciones'] = [Eleccion.objects.get(id=1)]
         context['secciones'] = Seccion.objects.all()
 
         return context
@@ -433,7 +430,6 @@ class Resultados(LoginRequiredMixin, TemplateView):
     template_name = "elecciones/resultados.html"
 
     @property
-    @lru_cache(128)
     def filtros(self):
         """a partir de los argumentos de urls, devuelve
         listas de seccion / circuito etc. para filtrar """
@@ -460,8 +456,8 @@ class Resultados(LoginRequiredMixin, TemplateView):
         if self.filtros:
             context['para'] = get_text_list(list(self.filtros), " y ")
         else:
-            context['para'] = 'Córdoba'
-        context['elecciones'] = Eleccion.objects.filter(id=3)
+            context['para'] = 'Neuquén'
+        context['elecciones'] = Eleccion.objects.filter(id=1)
         context['secciones'] = Seccion.objects.all()
         context['menu_activo'] = self.menu_activo()
 

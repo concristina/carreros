@@ -15,7 +15,6 @@ WAITING_FOR = 2   # 3 minutos
 
 @staff_member_required
 def elegir_adjunto(request):
-    #import ipdb; ipdb.set_trace()
     now = timezone.now()
     desde = now - timedelta(minutes=WAITING_FOR)
 
