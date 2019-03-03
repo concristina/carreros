@@ -353,7 +353,6 @@ class ResultadosEleccion(TemplateView):
             **sum_por_partido
         )
 
-
         result = {Partido.objects.get(id=k): v for k, v in result.items() if v is not None}
 
         # no positivos
@@ -364,7 +363,6 @@ class ResultadosEleccion(TemplateView):
         )
         result_opc = {k: v for k, v in result_opc.items() if v is not None}
 
-
         positivos = result_opc.get(POSITIVOS, 0)
         total = result_opc.pop(TOTAL, 0)
 
@@ -373,7 +371,7 @@ class ResultadosEleccion(TemplateView):
             # y redifinimos el total como la suma de todos los positivos y los
             # validos no positivos.
             positivos = sum(result.values())
-            total = positivos + sum(v for k, v in result_opc.items() if Opcion.objects.filter(nombre=k, es_contable=True).exists())
+            total = positivos + sum(v for k, v in result_opc.items() if Opcion.objects.filter(nombre=k, es_contable=False).exists())
             result.update(result_opc)
         else:
             result['Otros partidos'] = positivos - sum(result.values())
@@ -387,12 +385,16 @@ class ResultadosEleccion(TemplateView):
             expanded_result[k] = (v, porcentaje_total, porcentaje_positivos)
         result = expanded_result
 
+        tabla_positivos = {k:v for k,v in result.items() if isinstance(k, Partido)}
+        tabla_no_positivos = {k:v for k,v in result.items() if not isinstance(k, Partido)}
+        tabla_no_positivos["positivos"] = (positivos, f'{positivos*100/total:.2f}', 0)
         result_piechart = [
             {'key': str(k),
              'y': v[0],
-             'color': k.color if not isinstance(k, str) else '#CCCCCC'} for k, v in result.items()
+             'color': k.color if not isinstance(k, str) else '#CCCCCC'} for k, v in tabla_positivos.items()
         ]
-        resultados = {'tabla': result,
+        resultados = {'tabla_positivos': tabla_positivos,
+                      'tabla_no_positivos': tabla_no_positivos,
                       'result_piechart': result_piechart,
                       'electores': electores,
                       'positivos': positivos,

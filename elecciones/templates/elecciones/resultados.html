@@ -66,12 +66,27 @@
                   <tr>
                       <th>Partido</th>
                       <th>Votos</th>
-                      <th>% (sobre total)</th>
-                      <th>% (sobre positivos)</th>
+                      <th>%</th>
                   </tr>
                   </thead>
-                  {% with resultados.tabla as resultados %}
+
+                  {% with resultados.tabla_positivos as resultados %}
                       {% include "elecciones/tabla_resultados_es.html" with responsive=True incluir_votos=True%}
+                  {% endwith %}
+
+              </table>
+
+              <table class="striped bordered" style="margin-top: 2em">
+                  <thead>
+                  <tr>
+                      <th>Totales</th>
+                      <th>Cantidad</th>
+                      <th>%</th>
+                  </tr>
+                  </thead>
+
+                  {% with resultados.tabla_no_positivos as resultados %}
+                      {% include "elecciones/tabla_resultados_no_numerables.html" with responsive=True incluir_votos=True%}
                   {% endwith %}
               </table>
 
