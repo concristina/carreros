@@ -243,7 +243,7 @@ class MapaResultadosOficiales(StaffOnlyMixing, TemplateView):
         if self.filtros:
             context['para'] = get_text_list(list(self.filtros), " y ")
         else:
-            context['para'] = 'Córdoba'
+            context['para'] = 'Neuquén'
 
         context['resultados'] = self.get_resultados()
         return context
@@ -387,7 +387,7 @@ class ResultadosEleccion(TemplateView):
 
         tabla_positivos = {k:v for k,v in result.items() if isinstance(k, Partido)}
         tabla_no_positivos = {k:v for k,v in result.items() if not isinstance(k, Partido)}
-        tabla_no_positivos["positivos"] = (positivos, f'{positivos*100/total:.2f}', 0)
+        tabla_no_positivos["Positivos"] = (positivos, f'{positivos*100/total:.2f}', 0)
         result_piechart = [
             {'key': str(k),
              'y': v[0],
@@ -410,7 +410,7 @@ class ResultadosEleccion(TemplateView):
         if self.filtros:
             context['para'] = get_text_list([o.nombre for o in self.filtros], " y ")
         else:
-            context['para'] = 'Córdoba'
+            context['para'] = 'Neuquén'
         eleccion = get_object_or_404(Eleccion, slug=self.kwargs["slug"])
         context['object'] = eleccion
         context['eleccion_id'] = eleccion.id
@@ -552,7 +552,7 @@ class ResultadosProyectadosEleccion(StaffOnlyMixing, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        context['para'] = 'Córdoba'
+        context['para'] = 'Neuquén'
         context['eleccion'] = Eleccion.objects.filter(id=1)
         context['filas_tabla'] = self.filas_tabla
 
