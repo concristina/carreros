@@ -243,7 +243,7 @@ class MapaResultadosOficiales(StaffOnlyMixing, TemplateView):
         if self.filtros:
             context['para'] = get_text_list(list(self.filtros), " y ")
         else:
-            context['para'] = 'Córdoba'
+            context['para'] = 'Neuquén'
 
         context['resultados'] = self.get_resultados()
         return context
@@ -353,7 +353,6 @@ class ResultadosEleccion(TemplateView):
             **sum_por_partido
         )
 
-
         result = {Partido.objects.get(id=k): v for k, v in result.items() if v is not None}
 
         # no positivos
@@ -364,7 +363,6 @@ class ResultadosEleccion(TemplateView):
         )
         result_opc = {k: v for k, v in result_opc.items() if v is not None}
 
-
         positivos = result_opc.get(POSITIVOS, 0)
         total = result_opc.pop(TOTAL, 0)
 
@@ -373,7 +371,7 @@ class ResultadosEleccion(TemplateView):
             # y redifinimos el total como la suma de todos los positivos y los
             # validos no positivos.
             positivos = sum(result.values())
-            total = positivos + sum(v for k, v in result_opc.items() if Opcion.objects.filter(nombre=k, es_contable=True).exists())
+            total = positivos + sum(v for k, v in result_opc.items() if Opcion.objects.filter(nombre=k, es_contable=False).exists())
             result.update(result_opc)
         else:
             result['Otros partidos'] = positivos - sum(result.values())
@@ -387,12 +385,16 @@ class ResultadosEleccion(TemplateView):
             expanded_result[k] = (v, porcentaje_total, porcentaje_positivos)
         result = expanded_result
 
+        tabla_positivos = {k:v for k,v in result.items() if isinstance(k, Partido)}
+        tabla_no_positivos = {k:v for k,v in result.items() if not isinstance(k, Partido)}
+        tabla_no_positivos["Positivos"] = (positivos, f'{positivos*100/total:.2f}', 0)
         result_piechart = [
             {'key': str(k),
              'y': v[0],
-             'color': k.color if not isinstance(k, str) else '#CCCCCC'} for k, v in result.items()
+             'color': k.color if not isinstance(k, str) else '#CCCCCC'} for k, v in tabla_positivos.items()
         ]
-        resultados = {'tabla': result,
+        resultados = {'tabla_positivos': tabla_positivos,
+                      'tabla_no_positivos': tabla_no_positivos,
                       'result_piechart': result_piechart,
                       'electores': electores,
                       'positivos': positivos,
@@ -408,7 +410,7 @@ class ResultadosEleccion(TemplateView):
         if self.filtros:
             context['para'] = get_text_list([o.nombre for o in self.filtros], " y ")
         else:
-            context['para'] = 'Córdoba'
+            context['para'] = 'Neuquén'
         eleccion = get_object_or_404(Eleccion, slug=self.kwargs["slug"])
         context['object'] = eleccion
         context['eleccion_id'] = eleccion.id
@@ -550,7 +552,7 @@ class ResultadosProyectadosEleccion(StaffOnlyMixing, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        context['para'] = 'Córdoba'
+        context['para'] = 'Neuquén'
         context['eleccion'] = Eleccion.objects.filter(id=1)
         context['filas_tabla'] = self.filas_tabla
 
