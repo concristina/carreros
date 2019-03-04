@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     'djgeojson',
     'leaflet',
     'versatileimagefield',
+    'darkroom',
 
     # nuestras apps
     'elecciones',
