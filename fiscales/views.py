@@ -599,7 +599,7 @@ def elegir_acta_a_cargar(request, eleccion_id=None):
 
     mesas = Mesa.objects.filter(
         votomesareportado__isnull=True,
-        attachment__isnull=False,
+        attachments__isnull=False,
         orden_de_carga__gte=1
     )
 
