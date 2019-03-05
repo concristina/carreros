@@ -3,7 +3,7 @@
 
 {% block title %}Resultados{% endblock %}
 
-{% block page_title %}<h5>Resultados para {{para.nombre|default:para}}</h5>{% endblock %}
+{% block page_title %}<h5>Resultados para {{para|default:para}}</h5>{% endblock %}
 
  {% block head %}
     {{ block.super }}
@@ -52,8 +52,10 @@
         <div class="card" id="{{eleccion.slug}}" data-id="{{ eleccion.id }}">
             <div class="card-content" id="frame{{eleccion.id}}">
 
+              {% if resultados.tabla_positivos %}
 
               <h4>Sobre un {{ resultados.porcentaje_mesas_escrutadas }}% de mesas escrutadas </h4>
+
 
 
               <table class="striped bordered">
@@ -88,6 +90,11 @@
               <div id="piechart-{{object.id}}"></div>
 
 
+              {% else %}
+
+              <h5>Aún no hay mesas escrutadas en {{para}}</h5>
+
+              {% endif %}
 
             </div>
         </div>

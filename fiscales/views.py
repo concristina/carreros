@@ -692,7 +692,6 @@ def chequear_resultado(request):
 def chequear_resultado_mesa(request, eleccion_id, mesa_numero):
     mesa = get_object_or_404(Mesa, eleccion__id=eleccion_id, numero=mesa_numero)
     data = request.POST if request.method == 'POST' else None
-    import ipdb; ipdb.set_trace()
     if data and 'confirmar' in data:
 
         mesa.carga_confirmada = True

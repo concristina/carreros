@@ -1,5 +1,5 @@
 from functools import lru_cache
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 from django.contrib import messages
@@ -385,9 +385,12 @@ class ResultadosEleccion(TemplateView):
             expanded_result[k] = (v, porcentaje_total, porcentaje_positivos)
         result = expanded_result
 
-        tabla_positivos = {k:v for k,v in result.items() if isinstance(k, Partido)}
+
+        # TODO revisar si opciones contables no asociadas a partido.
+
+        tabla_positivos = OrderedDict(sorted([(k, v) for k,v in result.items() if isinstance(k, Partido)], key=lambda x: x[1][0], reverse=True))
         tabla_no_positivos = {k:v for k,v in result.items() if not isinstance(k, Partido)}
-        tabla_no_positivos["Positivos"] = (positivos, f'{positivos*100/total:.2f}', 0)
+        tabla_no_positivos["Positivos"] = (positivos, f'{positivos*100/total:.2f}' if total else '-', 0)
         result_piechart = [
             {'key': str(k),
              'y': v[0],
