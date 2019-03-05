@@ -8,7 +8,7 @@ class AsignarMesaForm(forms.ModelForm):
         required=False,
         help_text='A que número pertenece esta acta'
     )
-    mesa_confirm = forms.IntegerField(required=False)
+    mesa_confirm = forms.IntegerField(required=False, widget=forms.HiddenInput)
 
 
     class Meta:
