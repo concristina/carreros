@@ -16,6 +16,12 @@ urlpatterns = [
     url('^acta/(?P<eleccion_id>\d+)/(?P<mesa_numero>\d+)$',
         views.cargar_resultados, name='mesa-cargar-resultados'),
 
+    url('^chequear$',
+        views.chequear_resultado, name='chequear-resultado'),
+
+    url('^chequear/(?P<eleccion_id>\d+)/(?P<mesa_numero>\d+)$',
+        views.chequear_resultado_mesa, name='chequear-resultado-mesa'),
+
 
     url('^(?P<eleccion_id>\d+)/(?P<mesa_numero>\d+)/acta$',
         views.MesaActa.as_view(), name='mesa-acta'),

@@ -219,6 +219,9 @@ class Mesa(models.Model):
     taken = models.DateTimeField(null=True, editable=False)
     orden_de_carga = models.PositiveIntegerField(default=0, editable=False)
 
+    carga_confirmada = models.BooleanField(default=False)
+
+
     def get_absolute_url(self):
         return reverse('detalle-mesa', args=(self.eleccion.id, self.numero,))
 
