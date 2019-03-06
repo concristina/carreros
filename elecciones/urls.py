@@ -21,7 +21,7 @@ urlpatterns = [
     #url('^resultados/(?P<tipo>\w+)/(?P<numero>\d+)/(?P<nombre>\w+)$', views.Resultados.as_view(), name='resultados-por'),
     url('^proyecciones/(?P<eleccion_id>\d+)/$', views.ResultadosProyectadosEleccion.as_view(), name='proyecciones'),
 
-    #url('^resultadosponderados/(?P<slug>[\w-]+)/$', views.ResultadosPonderadosEleccion.as_view(), name='resultados-ponderados-eleccion'),
+    url('^resultadospk/(?P<slug>[\w-]+)/$', views.ResultadosEleccion.as_view(), { "template_name" : "elecciones/resultadospk.html"}, name='resultados-pk-eleccion'),
     url('^resultados/(?P<slug>[\w-]+)/$', views.ResultadosEleccion.as_view(), name='resultados-eleccion'),
     url('^resultados$', views.Resultados.as_view(), name='resultados'),
 

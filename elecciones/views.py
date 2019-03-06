@@ -251,6 +251,9 @@ class MapaResultadosOficiales(StaffOnlyMixing, TemplateView):
 class ResultadosEleccion(TemplateView):
     template_name = "elecciones/resultados.html"
 
+    def get_template_names(self):
+        return [self.kwargs.get("template_name", self.template_name)]
+
     @classmethod
     def agregaciones_por_partido(cls, eleccion):
         oficiales = True
@@ -273,6 +276,7 @@ class ResultadosEleccion(TemplateView):
         listas de seccion / circuito etc. para filtrar """
         if self.kwargs.get('tipo') == 'seccion':
             return Seccion.objects.filter(numero=self.kwargs.get('numero'))
+
         if self.kwargs.get('tipo') == 'circuito':
             return Circuito.objects.filter(numero=self.kwargs.get('numero'))
 
@@ -318,14 +322,17 @@ class ResultadosEleccion(TemplateView):
         sum_por_partido, otras_opciones = ResultadosEleccion.agregaciones_por_partido(eleccion)
 
         if self.filtros:
-            if 'seccion' in self.request.GET:
+            if 'agrupacionpk' in self.request.GET:
+                lookups = Q(mesa__lugar_votacion__circuito__agrupacionpk__in=self.filtros)
+                lookups2 = Q(lugar_votacion__circuito__agrupacionpk__in=self.filtros)
+
+            elif 'seccion' in self.request.GET:
                 lookups = Q(mesa__lugar_votacion__circuito__seccion__in=self.filtros)
                 lookups2 = Q(lugar_votacion__circuito__seccion__in=self.filtros)
 
             elif 'circuito' in self.request.GET:
                 lookups = Q(mesa__lugar_votacion__circuito__in=self.filtros)
                 lookups2 = Q(lugar_votacion__circuito__in=self.filtros)
-
 
             elif 'lugarvotacion' in self.request.GET:
                 lookups = Q(mesa__lugar_votacion__in=self.filtros)
@@ -405,7 +412,7 @@ class ResultadosEleccion(TemplateView):
                 key=lambda x: x[1]["porcentajeTotal"], reverse=True)
             )
 
-# como se hace para que los "Positivos" estén primeros en la tabla???
+        # como se hace para que los "Positivos" estén primeros en la tabla???
         
         tabla_no_positivos = {k:v for k,v in result.items() if not isinstance(k, Partido)}
         tabla_no_positivos["Positivos"] = {
@@ -450,6 +457,7 @@ class ResultadosEleccion(TemplateView):
 
         context['elecciones'] = [Eleccion.objects.get(id=1)]
         context['secciones'] = Seccion.objects.all()
+        context['agrupacionpk'] = AgrupacionPK.objects.all()
 
         return context
 
