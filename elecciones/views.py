@@ -346,6 +346,8 @@ class ResultadosEleccion(TemplateView):
 
         todas_mesas_escrutadas = Mesa.objects.filter(votomesareportado__in=reportados).distinct()
         escrutados = todas_mesas_escrutadas.aggregate(v=Sum('electores'))['v']
+        if escrutados is None:
+            escrutados = 0
 
         mesas_escrutadas = todas_mesas_escrutadas.count()
         total_mesas = Mesa.objects.filter(lookups2, eleccion__id=1).count()
