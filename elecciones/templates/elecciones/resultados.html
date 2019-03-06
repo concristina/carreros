@@ -62,11 +62,14 @@
                       <th>Partido</th>
                       <th>Votos</th>
                       <th>%</th>
+                      {% if resultados.proyectado %}
+                      <th>% proyectado</th>
+                      {% endif %}
                   </tr>
                   </thead>
 
-                  {% with resultados.tabla_positivos as resultados %}
-                      {% include "elecciones/tabla_resultados_es.html" with responsive=True incluir_votos=True%}
+                  {% with resultados.tabla_positivos as tabla %}
+                      {% include "elecciones/tabla_resultados_numerables.html" with responsive=True incluir_votos=True %}
                   {% endwith %}
 
               </table>
@@ -80,7 +83,7 @@
                   </tr>
                   </thead>
 
-                  {% with resultados.tabla_no_positivos as resultados %}
+                  {% with resultados.tabla_no_positivos as tabla %}
                       {% include "elecciones/tabla_resultados_no_numerables.html" with responsive=True incluir_votos=True%}
                   {% endwith %}
               </table>

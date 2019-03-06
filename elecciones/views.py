@@ -189,7 +189,6 @@ class MapaResultadosOficiales(StaffOnlyMixing, TemplateView):
         resultados = {}
         sum_por_partido, otras_opciones = MapaResultadosOficiales.agregaciones_por_partido()
         for eleccion in Eleccion.objects.all():
-
             if self.filtros:
                 if 'seccion' in self.request.GET:
                     lookups = Q(mesa__lugar_votacion__circuito__seccion__in=self.filtros)
@@ -314,6 +313,7 @@ class ResultadosEleccion(TemplateView):
         lookups = Q()
         lookups2 = Q()
         resultados = {}
+        proyectado = 'proyectado' in self.request.GET
 
         sum_por_partido, otras_opciones = ResultadosEleccion.agregaciones_por_partido(eleccion)
 
@@ -365,7 +365,7 @@ class ResultadosEleccion(TemplateView):
 
         positivos = result_opc.get(POSITIVOS, 0)
         total = result_opc.pop(TOTAL, 0)
-
+        
         if not positivos:
             # si no vienen datos positivos explicitos lo calculamos
             # y redifinimos el total como la suma de todos los positivos y los
@@ -382,15 +382,28 @@ class ResultadosEleccion(TemplateView):
 
             porcentaje_total = f'{v*100/total:.2f}' if total else '-'
             porcentaje_positivos = f'{v*100/positivos:.2f}' if positivos and isinstance(k, Partido) else '-'
-            expanded_result[k] = (v, porcentaje_total, porcentaje_positivos)
+            expanded_result[k] = {
+                "votos": v,
+                "porcentajeTotal": porcentaje_total,
+                "porcentajePositivos": porcentaje_positivos
+            }
+            if (proyectado):
+                expanded_result[k]["proyeccion"] = f'{v*100/positivos:.2f}'
+   
+
         result = expanded_result
 
         tabla_positivos = {k:v for k,v in result.items() if isinstance(k, Partido)}
+
+
         tabla_no_positivos = {k:v for k,v in result.items() if not isinstance(k, Partido)}
-        tabla_no_positivos["Positivos"] = (positivos, f'{positivos*100/total:.2f}', 0)
+        tabla_no_positivos["Positivos"] = {
+            "votos": positivos,
+            "porcentajeTotal": f'{positivos*100/total:.2f}'
+        }
         result_piechart = [
             {'key': str(k),
-             'y': v[0],
+             'y': v['votos'],
              'color': k.color if not isinstance(k, str) else '#CCCCCC'} for k, v in tabla_positivos.items()
         ]
         resultados = {'tabla_positivos': tabla_positivos,
@@ -399,6 +412,7 @@ class ResultadosEleccion(TemplateView):
                       'electores': electores,
                       'positivos': positivos,
                       'escrutados': total,
+                      'proyectado': proyectado,
                       'porcentaje_mesas_escrutadas': porcentaje_mesas_escrutadas,
                       'participacion': f'{total*100/electores:.2f}' if electores else '-',
                     }
