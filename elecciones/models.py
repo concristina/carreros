@@ -1,9 +1,11 @@
 import os
 from itertools import chain
+from datetime import timedelta
+from django.utils import timezone
 from django.contrib.auth.models import User
 from django.urls import reverse
 from django.db import models
-from django.db.models import Sum, IntegerField, Case, Value, When, F
+from django.db.models import Sum, IntegerField, Case, Value, When, F, Q
 from django.conf import settings
 from djgeojson.fields import PointField
 from django.template.loader import render_to_string
@@ -13,7 +15,6 @@ from django.dispatch import receiver
 from django.db.models.signals import m2m_changed, post_save
 from model_utils.fields import StatusField, MonitorField
 from model_utils import Choices
-
 from adjuntos.models import Attachment
 
 
@@ -220,6 +221,20 @@ class Mesa(models.Model):
     orden_de_carga = models.PositiveIntegerField(default=0, editable=False)
 
     carga_confirmada = models.BooleanField(default=False)
+
+
+    @classmethod
+    def con_carga_pendiente(cls, wait=2):
+        desde = timezone.now() - timedelta(minutes=wait)
+
+        return cls.objects.filter(
+            votomesareportado__isnull=True,
+            attachments__isnull=False,
+            eleccion__id=1,
+            orden_de_carga__gte=1,
+        ).filter(
+            Q(taken__isnull=True) | Q(taken__lt=desde)
+        )
 
 
     def get_absolute_url(self):

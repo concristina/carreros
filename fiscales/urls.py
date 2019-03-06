@@ -12,7 +12,7 @@ urlpatterns = [
         views.asignacion_estado, name='asignacion-estado'),
     url('^(?P<eleccion_id>\d+)/(?P<mesa_numero>\d+)$',
         views.MesaDetalle.as_view(), name='detalle-mesa'),
-    url('^acta/(?P<eleccion_id>\d+)?$', views.elegir_acta_a_cargar, name='elegir-acta-a-cargar'),
+    url('^acta/$', views.elegir_acta_a_cargar, name='elegir-acta-a-cargar'),
     url('^acta/(?P<eleccion_id>\d+)/(?P<mesa_numero>\d+)$',
         views.cargar_resultados, name='mesa-cargar-resultados'),
 

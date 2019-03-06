@@ -589,34 +589,17 @@ class MesaDetalle(LoginRequiredMixin, MiAsignableMixin, DetailView):
         )
 
 
-
-
-
 @staff_member_required
-def elegir_acta_a_cargar(request, eleccion_id=None):
+def elegir_acta_a_cargar(request):
 
-
-    now = timezone.now()
-    desde = now - timedelta(minutes=WAITING_FOR)
     # se eligen mesas que nunca se intentaron cargar o que se asignaron a
 
-    mesas = Mesa.objects.filter(
-        votomesareportado__isnull=True,
-        attachments__isnull=False,
-        orden_de_carga__gte=1
-    )
+    mesas = Mesa.con_carga_pendiente().order_by('orden_de_carga')
 
-    if eleccion_id:
-        # si se limita a una eleccion particular se elige desde acá.
-        mesas = mesas.filter(eleccion_id=eleccion_id)
-
-    mesas = mesas.filter(
-        Q(taken__isnull=True) | Q(taken__lt=desde)
-    ).order_by('orden_de_carga')
     if mesas.exists():
         mesa = mesas[0]
         # se marca el adjunto
-        mesa.taken = now
+        mesa.taken = timezone.now()
         mesa.save(update_fields=['taken'])
         return redirect(
             'mesa-cargar-resultados',
@@ -750,7 +733,4 @@ def datos_fiscales_por_seccion(request):
 
 
     return render(request, 'fiscales/datos_fiscales_por_seccion.html', {'generales': generales, 'de_mesa': de_mesa})
-
-
-
 

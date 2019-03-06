@@ -1,12 +1,10 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.utils import timezone
 from django.http import JsonResponse
 from django.urls import reverse
 from django.views.generic.edit import UpdateView
-from django.db.models import Q
 from elecciones.views import StaffOnlyMixing
 from django.contrib.admin.views.decorators import staff_member_required
-from django.utils import timezone
-from datetime import timedelta
 import base64
 from django.core.files.base import ContentFile
 from django.views.decorators.csrf import csrf_exempt
@@ -14,24 +12,16 @@ from .models import Attachment
 from .forms import AsignarMesaForm
 
 
-WAITING_FOR = 2   # 3 minutos
-
 
 @staff_member_required
 def elegir_adjunto(request):
-    now = timezone.now()
-    desde = now - timedelta(minutes=WAITING_FOR)
-
     # se eligen actas que nunca se intentaron cargar o que se asignaron a
-    # hace más de 3 minutos
-    attachments = Attachment.objects.filter(
-        Q(problema__isnull=True, mesa__isnull=True),
-        Q(taken__isnull=True) | Q(taken__lt=desde)
-    ).order_by('?')
+    # hace más de 2 minutos
+    attachments = Attachment.sin_asignar()
     if attachments.exists():
-        a = attachments[0]
+        a = attachments.order_by('?').first()
         # se marca el adjunto
-        a.taken = now
+        a.taken = timezone.now()
         a.save(update_fields=['taken'])
         return redirect('asignar-mesa', attachment_id=a.id)
 

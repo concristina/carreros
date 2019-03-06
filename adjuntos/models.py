@@ -1,7 +1,11 @@
+from datetime import timedelta
+from urllib.parse import quote_plus
+from django.utils import timezone
+from django.db.models import Q
 from django.db import models
 from django.dispatch import receiver
 from django.db.models.signals import post_save
-from urllib.parse import quote_plus
+
 from model_utils import Choices
 from versatileimagefield.fields import VersatileImageField
 
@@ -69,6 +73,14 @@ class Attachment(models.Model):
     taken = models.DateTimeField(null=True)
     problema = models.CharField(max_length=100, null=True, blank=True, choices=PROBLEMAS)
 
+
+    @classmethod
+    def sin_asignar(cls, wait=2):
+        desde = timezone.now() - timedelta(minutes=wait)
+        return cls.objects.filter(
+            Q(problema__isnull=True, mesa__isnull=True),
+            Q(taken__isnull=True) | Q(taken__lt=desde)
+        )
 
     def __str__(self):
         return f'{self.foto} ({self.mimetype})'
