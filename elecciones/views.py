@@ -21,7 +21,7 @@ from django.views import View
 from fiscales.models import Fiscal
 from .forms import ReferentesForm, LoggueConMesaForm
 from .models import *
-from .models import LugarVotacion, Circuito
+from .models import LugarVotacion, Circuito, AgrupacionPK
 
 
 POSITIVOS = 'TOTAL DE VOTOS AGRUPACIONES POLÍTICAS'
@@ -290,6 +290,8 @@ class ResultadosEleccion(TemplateView):
             return LugarVotacion.objects.filter(id__in=self.request.GET.getlist('lugarvotacion'))
         elif 'mesa' in self.request.GET:
             return Mesa.objects.filter(id__in=self.request.GET.getlist('mesa'))
+        elif 'agrupacionpk' in self.request.GET:
+            return AgrupacionPK.objects.filter(id__in=self.request.GET.getlist('agrupacionpk'))
 
     @lru_cache(128)
     def electores(self, eleccion):
@@ -308,6 +310,11 @@ class ResultadosEleccion(TemplateView):
 
             elif 'mesa' in self.request.GET:
                 lookups = Q(id__in=self.filtros)
+
+            elif 'agrupacionpk' in self.request.GET:
+                lookups = Q(lugar_votacion__circuito__seccion_de_ponderacion__in=self.filtros)
+#                lookups = Q(lugar_votacion__circuito__agrupacionpk__in=self.filtros)
+
         mesas = Mesa.objects.filter(eleccion=eleccion).filter(lookups).distinct()
         electores = mesas.aggregate(v=Sum('electores'))['v']
         return electores or 0
@@ -323,8 +330,10 @@ class ResultadosEleccion(TemplateView):
 
         if self.filtros:
             if 'agrupacionpk' in self.request.GET:
-                lookups = Q(mesa__lugar_votacion__circuito__agrupacionpk__in=self.filtros)
-                lookups2 = Q(lugar_votacion__circuito__agrupacionpk__in=self.filtros)
+                lookups = Q(mesa__lugar_votacion__circuito__seccion_de_ponderacion__in=self.filtros)
+                lookups2 = Q(lugar_votacion__circuito__seccion_de_ponderacion__in=self.filtros)
+#                lookups = Q(mesa__lugar_votacion__circuito__agrupacionpk__in=self.filtros)
+#                lookups2 = Q(lugar_votacion__circuito__agrupacionpk__in=self.filtros)
 
             elif 'seccion' in self.request.GET:
                 lookups = Q(mesa__lugar_votacion__circuito__seccion__in=self.filtros)
@@ -486,6 +495,8 @@ class Resultados(LoginRequiredMixin, TemplateView):
             return []
         elif isinstance(self.filtros[0], Seccion):
             return (self.filtros[0], None)
+#        elif isinstance(self.filtros[0], AgrupacionPK):
+#            return (self.filtros[0], None)
         elif isinstance(self.filtros[0], Circuito):
             return (self.filtros[0].seccion, self.filtros[0])
 

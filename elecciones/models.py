@@ -65,7 +65,7 @@ class AgrupacionPK(models.Model):
     @property
     def electores(self):
         return Mesa.objects.filter(eleccion__id=1,
-            lugar_votacion__circuito__seccion_de_ponderacion=self,
+            lugar_votacion__circuito__agrupacionpk=self,
         ).aggregate(v=Sum('electores'))['v']
 
 

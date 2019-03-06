@@ -1,7 +1,7 @@
 {% extends "fiscales/base.html" %}
 {% load staticfiles %}
 
-{% block title %}Resultados{% endblock %}
+{% block title %}Resultados por Agrupaciones Ad hoc{% endblock %}
 
 {% block page_title %}<h5>Resultados para {{para|default:para}}</h5>{% endblock %}
 
@@ -22,8 +22,8 @@
             <a class="collapsible-header"><i class="material-icons">arrow_drop_down</i></a>
             <div class="collapsible-body">
               <ul>
-                {% for seccion in agrupacion.seccion_set.all %}
-                    <li><a href="{{ request.path }}?seccion={{ seccion.id }}">{{ seccion }}</a></li>
+                {% for circuito in agrupacion.circuito_set.all %}
+                    <li><a href="{{ request.path }}?circuito={{ circuito.id }}">{{ circuito }}</a></li>
                 {% endfor %}
               </ul>
             </div>
