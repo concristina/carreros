@@ -89,7 +89,7 @@ class QuieroSerFiscal(SessionWizardView):
     form_list = [
         QuieroSerFiscal1,
         QuieroSerFiscal2,
-        QuieroSerFiscal3,
+        #  QuieroSerFiscal3,
         QuieroSerFiscal4
     ]
 
@@ -110,51 +110,51 @@ class QuieroSerFiscal(SessionWizardView):
                 'nombre': fiscal.nombres,
                 'apellido': fiscal.apellido,
                 'telefono': fiscal.telefonos[0] if fiscal.telefonos else '',
-                'disponibilidad': fiscal.disponibilidad,
-                'movilidad': fiscal.movilidad,
-                'seccion': fiscal.escuelas[0].circuito.seccion if fiscal.escuelas else None
+                # 'disponibilidad': fiscal.disponibilidad,
+                # 'movilidad': fiscal.movilidad,
+                # 'seccion': fiscal.escuelas[0].circuito.seccion if fiscal.escuelas else None
             }
-        elif step == '2' and fiscal:
-            seccion = self.get_cleaned_data_for_step('1')['seccion']
-            seccion_original = fiscal.escuelas[0].circuito.seccion if fiscal.escuelas else None
+        # elif step == '2' and fiscal:
+        #     seccion = self.get_cleaned_data_for_step('1')['seccion']
+        #     seccion_original = fiscal.escuelas[0].circuito.seccion if fiscal.escuelas else None
 
-            if seccion_original and seccion == seccion_original:
-                circuito = fiscal.escuelas[0].circuito
-            else:
-                circuito = None
+        #     if seccion_original and seccion == seccion_original:
+        #         circuito = fiscal.escuelas[0].circuito
+        #     else:
+        #         circuito = None
 
-            return {
-                'circuito': circuito
-            }
-        elif step == '3' and fiscal:
-            circuito = self.get_cleaned_data_for_step('2')['circuito']
-            circuito_original = fiscal.escuelas[0].circuito if fiscal.escuelas else None
+        #     return {
+        #         'circuito': circuito
+        #     }
+        # elif step == '3' and fiscal:
+        #     circuito = self.get_cleaned_data_for_step('2')['circuito']
+        #     circuito_original = fiscal.escuelas[0].circuito if fiscal.escuelas else None
 
-            if circuito_original and circuito == circuito_original:
-                escuela = fiscal.escuelas[0]
-            else:
-                escuela = None
+        #     if circuito_original and circuito == circuito_original:
+        #         escuela = fiscal.escuelas[0]
+        #     else:
+        #         escuela = None
 
-            return {
-                'escuela': escuela
-            }
+        #     return {
+        #         'escuela': escuela
+        #     }
 
         return self.initial_dict.get(step, {})
 
-    def get_form(self, step=None, data=None, files=None):
-        form = super().get_form(step, data, files)
+    # def get_form(self, step=None, data=None, files=None):
+    #     form = super().get_form(step, data, files)
 
-        # determine the step if not given
-        if step is None:
-            step = self.steps.current
+    #     # determine the step if not given
+    #     if step is None:
+    #         step = self.steps.current
 
-        if step == '2':
-            seccion = self.get_cleaned_data_for_step('1')['seccion']
-            form.fields['circuito'].queryset = Circuito.objects.filter(seccion=seccion)
-        elif step == '3':
-            circuito = self.get_cleaned_data_for_step('2')['circuito']
-            form.fields['escuela'].queryset = LugarVotacion.objects.filter(circuito=circuito)
-        return form
+    #     if step == '2':
+    #         seccion = self.get_cleaned_data_for_step('1')['seccion']
+    #         form.fields['circuito'].queryset = Circuito.objects.filter(seccion=seccion)
+    #     elif step == '3':
+    #         circuito = self.get_cleaned_data_for_step('2')['circuito']
+    #         form.fields['escuela'].queryset = LugarVotacion.objects.filter(circuito=circuito)
+    #     return form
 
     def done(self, form_list, **kwargs):
         data = self.get_all_cleaned_data()
@@ -172,7 +172,7 @@ class QuieroSerFiscal(SessionWizardView):
         fiscal.dni = dni
         fiscal.nombres = data['nombre']
         fiscal.apellido = data['apellido']
-        fiscal.escuela_donde_vota = data['escuela']
+        # fiscal.escuela_donde_vota = data['escuela']
         fiscal.save()
         fiscal.agregar_dato_de_contacto('teléfono', data['telefono'])
         fiscal.agregar_dato_de_contacto('email', email)
@@ -184,7 +184,7 @@ class QuieroSerFiscal(SessionWizardView):
         body_text = html2text(body_html)
 
         send_mail(
-            '[NOREPLY] Recibimos tu inscripción como fiscales',
+            '[NOREPLY] Recibimos tu inscripción como fiscal digital',
             body_text,
             'elecciones_neuquen@cba3.com.ar',
             [email],

@@ -117,26 +117,30 @@ class QuieroSerFiscal1(forms.Form):
 class QuieroSerFiscal2(forms.ModelForm):
     nombre = forms.CharField()
     apellido = forms.CharField()
-    telefono = forms.CharField(label='Teléfono', help_text='Preferentemente celular')
-    movilidad = forms.BooleanField(
-        label='¿Tenés Movilidad propia?', required=False,
-        help_text='Marcá la casilla si tenés cómo movilizarte el día de la elección'
-    )
-    seccion = forms.ModelChoiceField(label='Sección electoral', queryset=Seccion.objects.all(),
-        help_text=mark_safe(f'Sección/departamento donde votás y/o preferís fiscalizar. {LINK}'), 
-        required=False
-    )
+    telefono = forms.CharField(
+        label='Teléfono', help_text='Preferentemente celular')
+
+
+    # movilidad = forms.BooleanField(
+    #     label='¿Tenés Movilidad propia?', required=False,
+    #     help_text='Marcá la casilla si tenés cómo movilizarte el día de la elección'
+    # )
+    # seccion = forms.ModelChoiceField(label='Sección electoral', queryset=Seccion.objects.all(),
+    #     help_text=mark_safe(f'Sección/departamento donde votás y/o preferís fiscalizar. {LINK}'),
+    #     required=False
+    # )
 
     layout = Layout(Row('nombre', 'apellido'),
                     'telefono',
-                    Row('movilidad', 'disponibilidad'),
-                    Fieldset('¿Dónde votás?',
-                             'seccion'))
+                    # Row('movilidad', 'disponibilidad'),
+                    # Fieldset('¿Dónde votás?',
+                    #         'seccion')
+                    )
     class Meta:
         model = Fiscal
         fields = [
-            'nombre', 'apellido', 'telefono', 'movilidad',
-            'disponibilidad', 'seccion'
+            'nombre', 'apellido', 'telefono',
+            # 'movilidad', 'disponibilidad', 'seccion'
         ]
 
 
@@ -161,10 +165,10 @@ class QuieroSerFiscal4(forms.Form):
         'password_mismatch': _("The two password fields didn't match."),
     }
 
-    escuela = forms.ModelChoiceField(queryset=LugarVotacion.objects.all(),
-        help_text=mark_safe(f'Escuela donde votás y/o preferís fiscalizar. {LINK}'),
-        required=False
-    )
+    # escuela = forms.ModelChoiceField(queryset=LugarVotacion.objects.all(),
+    #    help_text=mark_safe(f'Escuela donde votás y/o preferís fiscalizar. {LINK}'),
+    #    required=False
+    # )
     new_password1 = forms.CharField(
         label=_("New password"),
         widget=forms.PasswordInput,
