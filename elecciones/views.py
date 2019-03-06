@@ -21,7 +21,7 @@ from django.views import View
 from fiscales.models import Fiscal
 from .forms import ReferentesForm, LoggueConMesaForm
 from .models import *
-from .models import LugarVotacion, Circuito
+from .models import LugarVotacion, Circuito, AgrupacionPK
 
 
 POSITIVOS = 'TOTAL DE VOTOS AGRUPACIONES POLÍTICAS'
@@ -189,7 +189,6 @@ class MapaResultadosOficiales(StaffOnlyMixing, TemplateView):
         resultados = {}
         sum_por_partido, otras_opciones = MapaResultadosOficiales.agregaciones_por_partido()
         for eleccion in Eleccion.objects.all():
-
             if self.filtros:
                 if 'seccion' in self.request.GET:
                     lookups = Q(mesa__lugar_votacion__circuito__seccion__in=self.filtros)
@@ -252,6 +251,9 @@ class MapaResultadosOficiales(StaffOnlyMixing, TemplateView):
 class ResultadosEleccion(TemplateView):
     template_name = "elecciones/resultados.html"
 
+    def get_template_names(self):
+        return [self.kwargs.get("template_name", self.template_name)]
+
     @classmethod
     def agregaciones_por_partido(cls, eleccion):
         oficiales = True
@@ -274,6 +276,7 @@ class ResultadosEleccion(TemplateView):
         listas de seccion / circuito etc. para filtrar """
         if self.kwargs.get('tipo') == 'seccion':
             return Seccion.objects.filter(numero=self.kwargs.get('numero'))
+
         if self.kwargs.get('tipo') == 'circuito':
             return Circuito.objects.filter(numero=self.kwargs.get('numero'))
 
@@ -287,6 +290,8 @@ class ResultadosEleccion(TemplateView):
             return LugarVotacion.objects.filter(id__in=self.request.GET.getlist('lugarvotacion'))
         elif 'mesa' in self.request.GET:
             return Mesa.objects.filter(id__in=self.request.GET.getlist('mesa'))
+        elif 'agrupacionpk' in self.request.GET:
+            return AgrupacionPK.objects.filter(id__in=self.request.GET.getlist('agrupacionpk'))
 
     @lru_cache(128)
     def electores(self, eleccion):
@@ -305,6 +310,11 @@ class ResultadosEleccion(TemplateView):
 
             elif 'mesa' in self.request.GET:
                 lookups = Q(id__in=self.filtros)
+
+            elif 'agrupacionpk' in self.request.GET:
+                lookups = Q(lugar_votacion__circuito__seccion_de_ponderacion__in=self.filtros)
+#                lookups = Q(lugar_votacion__circuito__agrupacionpk__in=self.filtros)
+
         mesas = Mesa.objects.filter(eleccion=eleccion).filter(lookups).distinct()
         electores = mesas.aggregate(v=Sum('electores'))['v']
         return electores or 0
@@ -314,18 +324,24 @@ class ResultadosEleccion(TemplateView):
         lookups = Q()
         lookups2 = Q()
         resultados = {}
+        proyectado = 'proyectado' in self.request.GET
 
         sum_por_partido, otras_opciones = ResultadosEleccion.agregaciones_por_partido(eleccion)
 
         if self.filtros:
-            if 'seccion' in self.request.GET:
+            if 'agrupacionpk' in self.request.GET:
+                lookups = Q(mesa__lugar_votacion__circuito__seccion_de_ponderacion__in=self.filtros)
+                lookups2 = Q(lugar_votacion__circuito__seccion_de_ponderacion__in=self.filtros)
+#                lookups = Q(mesa__lugar_votacion__circuito__agrupacionpk__in=self.filtros)
+#                lookups2 = Q(lugar_votacion__circuito__agrupacionpk__in=self.filtros)
+
+            elif 'seccion' in self.request.GET:
                 lookups = Q(mesa__lugar_votacion__circuito__seccion__in=self.filtros)
                 lookups2 = Q(lugar_votacion__circuito__seccion__in=self.filtros)
 
             elif 'circuito' in self.request.GET:
                 lookups = Q(mesa__lugar_votacion__circuito__in=self.filtros)
                 lookups2 = Q(lugar_votacion__circuito__in=self.filtros)
-
 
             elif 'lugarvotacion' in self.request.GET:
                 lookups = Q(mesa__lugar_votacion__in=self.filtros)
@@ -344,7 +360,12 @@ class ResultadosEleccion(TemplateView):
         )
 
 
-        mesas_escrutadas = Mesa.objects.filter(votomesareportado__in=reportados).distinct().count()
+        todas_mesas_escrutadas = Mesa.objects.filter(votomesareportado__in=reportados).distinct()
+        escrutados = todas_mesas_escrutadas.aggregate(v=Sum('electores'))['v']
+        if escrutados is None:
+            escrutados = 0
+
+        mesas_escrutadas = todas_mesas_escrutadas.count()
         total_mesas = Mesa.objects.filter(lookups2, eleccion__id=1).count()
         porcentaje_mesas_escrutadas = f'{mesas_escrutadas*100/total_mesas:.2f}'
 
@@ -382,18 +403,36 @@ class ResultadosEleccion(TemplateView):
 
             porcentaje_total = f'{v*100/total:.2f}' if total else '-'
             porcentaje_positivos = f'{v*100/positivos:.2f}' if positivos and isinstance(k, Partido) else '-'
-            expanded_result[k] = (v, porcentaje_total, porcentaje_positivos)
+            expanded_result[k] = {
+                "votos": v,
+                "porcentajeTotal": porcentaje_total,
+                "porcentajePositivos": porcentaje_positivos
+            }
+            if (proyectado):
+                expanded_result[k]["proyeccion"] = f'{v*100/positivos:.2f}'
+   
+
         result = expanded_result
 
 
         # TODO revisar si opciones contables no asociadas a partido.
 
-        tabla_positivos = OrderedDict(sorted([(k, v) for k,v in result.items() if isinstance(k, Partido)], key=lambda x: x[1][0], reverse=True))
+        tabla_positivos = OrderedDict(
+            sorted(
+                [(k, v) for k,v in result.items() if isinstance(k, Partido)], 
+                key=lambda x: x[1]["porcentajeTotal"], reverse=True)
+            )
+
+        # como se hace para que los "Positivos" estén primeros en la tabla???
+        
         tabla_no_positivos = {k:v for k,v in result.items() if not isinstance(k, Partido)}
-        tabla_no_positivos["Positivos"] = (positivos, f'{positivos*100/total:.2f}' if total else '-', 0)
+        tabla_no_positivos["Positivos"] = {
+            "votos": positivos,
+            "porcentajeTotal": f'{positivos*100/total:.2f}' if total else '-'
+        }
         result_piechart = [
             {'key': str(k),
-             'y': v[0],
+             'y': v["votos"],
              'color': k.color if not isinstance(k, str) else '#CCCCCC'} for k, v in tabla_positivos.items()
         ]
         resultados = {'tabla_positivos': tabla_positivos,
@@ -401,9 +440,12 @@ class ResultadosEleccion(TemplateView):
                       'result_piechart': result_piechart,
                       'electores': electores,
                       'positivos': positivos,
-                      'escrutados': total,
+                      'escrutados': escrutados,
+                      'votantes': total,
+                      'proyectado': proyectado,
                       'porcentaje_mesas_escrutadas': porcentaje_mesas_escrutadas,
-                      'participacion': f'{total*100/electores:.2f}' if electores else '-',
+                      'porcentaje_escrutado': f'{escrutados*100/electores:.2f}' if electores else '-',
+                      'porcentaje_participacion': f'{total*100/escrutados:.2f}' if escrutados else '-',
                     }
 
         return resultados
@@ -426,6 +468,7 @@ class ResultadosEleccion(TemplateView):
 
         context['elecciones'] = [Eleccion.objects.get(id=1)]
         context['secciones'] = Seccion.objects.all()
+        context['agrupacionpk'] = AgrupacionPK.objects.all()
 
         return context
 
@@ -452,6 +495,8 @@ class Resultados(LoginRequiredMixin, TemplateView):
             return []
         elif isinstance(self.filtros[0], Seccion):
             return (self.filtros[0], None)
+#        elif isinstance(self.filtros[0], AgrupacionPK):
+#            return (self.filtros[0], None)
         elif isinstance(self.filtros[0], Circuito):
             return (self.filtros[0].seccion, self.filtros[0])
 
