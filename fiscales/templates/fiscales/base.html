@@ -33,14 +33,14 @@
 
             {% url 'elegir-acta-a-cargar' as url %}
             <li {% if url in request.path %} class="active"{% endif %}>
-                <a href="{{ url }}" class="collapsible-header" data-turbolinks="false">Cargar resultados<i class="material-icons">dvr</i><span class="badge">{{ mesas_count }}</span></a>
+                <a href="{{ url }}" class="collapsible-header" data-turbolinks="false">Cargar resultados<i class="material-icons">dvr</i><span class="badge">{{ mesas_pendientes_count }}</span></a>
             </li>
 
 
             {% url 'chequear-resultado' as url %}
             <li {% if url in request.path %} class="active"{% endif %}>
                 <a href="{{ url }}" class="collapsible-header" data-turbolinks="false">Chequear una mesa<i class="material-icons">
-check_box</i></a>
+check_box</i><span class="badge">{{ mesas_a_confirmar_count }}</span></a>
             </li>
 
 

@@ -59,7 +59,7 @@ class AgrupacionPK(models.Model):
     # una agrupacion de circuitos interna
     numero = models.PositiveIntegerField()
     nombre = models.CharField(max_length=100)
-    
+
     def __str__(self):
         return f"{self.numero} - {self.nombre}"
 
@@ -246,6 +246,10 @@ class Mesa(models.Model):
             Q(taken__isnull=True) | Q(taken__lt=desde)
         )
 
+
+    @classmethod
+    def con_carga_a_confirmar(cls):
+        return cls.objects.filter(votomesareportado__isnull=False, carga_confirmada=False).distinct()
 
     def get_absolute_url(self):
         return reverse('detalle-mesa', args=(self.eleccion.id, self.numero,))
