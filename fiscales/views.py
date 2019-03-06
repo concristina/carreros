@@ -668,9 +668,10 @@ def cargar_resultados(request, eleccion_id, mesa_numero):
 @staff_member_required
 def chequear_resultado(request):
     mesa = Mesa.con_carga_a_confirmar().order_by('?').first()
-    if mesa:
-        return redirect('chequear-resultado-mesa', eleccion_id=1, mesa_numero=mesa.numero)
-    return redirect('elegir-acta-a-cargar')
+    if not mesa:
+        return redirect('elegir-acta-a-cargar')
+    return redirect('chequear-resultado-mesa', eleccion_id=1, mesa_numero=mesa.numero)
+
 
 
 @staff_member_required
