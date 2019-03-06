@@ -3,7 +3,7 @@
 
 {% block title %}Resultados{% endblock %}
 
-{% block page_title %}<h5>Resultados para {{para.nombre|default:para}}</h5>{% endblock %}
+{% block page_title %}<h5>Resultados para {{para|default:para}}</h5>{% endblock %}
 
  {% block head %}
     {{ block.super }}
@@ -52,8 +52,10 @@
         <div class="card" id="{{eleccion.slug}}" data-id="{{ eleccion.id }}">
             <div class="card-content" id="frame{{eleccion.id}}">
 
+              {% if resultados.tabla_positivos %}
 
               <h4>Sobre un {{ resultados.porcentaje_mesas_escrutadas }}% de mesas escrutadas </h4>
+
 
 
               <table class="striped bordered">
@@ -91,6 +93,11 @@
               <div id="piechart-{{object.id}}"></div>
 
 
+              {% else %}
+
+              <h5>Aún no hay mesas escrutadas en {{para}}</h5>
+
+              {% endif %}
 
             </div>
         </div>
@@ -101,36 +108,44 @@
 {% block right-panel %}
  <div class="card">
     <div id="metadata" class="card-content">
-
-          <table class="borderless" style="font-size: 0.7em">
-            <tr>
-                <th title="Electores"><i class="small material-icons">person_outline</i>Electores</th>
-            </tr>
-            <tr>
-                <td title="Electores">{{ resultados.electores}} </td>
-            </tr>
-            <tr>
-                <th title="Escrutados"><i class="small material-icons">person</i>Escrutados</th>
-            </tr>
-            <tr>
-                <td title="Escrutados">{{ resultados.escrutados }} </td>
-            </tr>
-            <tr>
-                <th title="Positivos"><i class="small material-icons">person_add</i>Positivos</th>
-            </tr>
-            <tr>
-
-                <td title="Positivos">{{ resultados.positivos}}</td>
-            </tr>
-            <tr>
-                <th title="% escrutado"><i class="small material-icons">timeline</i>% escrutado</th>
-            </tr>
-            <tr>
-                <td title="% escrutado">{{ resultados.porcentaje_escrutado}} %</td>
-            </tr>
-        </table>
-
-
+      <table class="borderless" style="font-size: 0.9em">
+          <tr>
+              <th title="Electores"><i class="small material-icons">people_outline</i>Electores</th>
+          </tr>
+          <tr>
+              <td title="Electores">{{ resultados.electores}} </td>
+          </tr>
+          <tr>
+              <th title="Escrutados"><i class="small material-icons">person_outline</i>Escrutados</th>
+          </tr>
+          <tr>
+              <td title="Escrutados">{{ resultados.escrutados }} </td>
+          </tr>
+          <tr>
+              <th title="% Escrutado"><i class="small material-icons">trending_up</i>% Escrutado</th>
+          </tr>
+          <tr>
+              <td title="% Escrutado">{{ resultados.porcentaje_escrutado}} %</td>
+          </tr>
+          <tr>
+              <th title="Votantes"><i class="small material-icons">person</i>Votantes</th>
+          </tr>
+          <tr>
+              <td title="Votantes">{{ resultados.votantes }} </td>
+          </tr>
+          <tr>
+              <th title="Positivos"><i class="small material-icons">person_add</i>Positivos</th>
+          </tr>
+          <tr>
+              <td title="Positivos">{{ resultados.positivos}}</td>
+          </tr>
+          <tr>
+              <th title="% Participación"><i class="small material-icons">timeline</i>% Participacion</th>
+          </tr>
+          <tr>
+              <td title="% Participación">{{ resultados.porcentaje_participacion}} %</td>
+          </tr>
+      </table>
     </div>
 </div>
 

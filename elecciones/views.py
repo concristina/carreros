@@ -1,5 +1,5 @@
 from functools import lru_cache
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 from django.contrib import messages
@@ -344,7 +344,10 @@ class ResultadosEleccion(TemplateView):
         )
 
 
-        mesas_escrutadas = Mesa.objects.filter(votomesareportado__in=reportados).distinct().count()
+        todas_mesas_escrutadas = Mesa.objects.filter(votomesareportado__in=reportados).distinct()
+        escrutados = todas_mesas_escrutadas.aggregate(v=Sum('electores'))['v']
+
+        mesas_escrutadas = todas_mesas_escrutadas.count()
         total_mesas = Mesa.objects.filter(lookups2, eleccion__id=1).count()
         porcentaje_mesas_escrutadas = f'{mesas_escrutadas*100/total_mesas:.2f}'
 
@@ -365,7 +368,7 @@ class ResultadosEleccion(TemplateView):
 
         positivos = result_opc.get(POSITIVOS, 0)
         total = result_opc.pop(TOTAL, 0)
-        
+
         if not positivos:
             # si no vienen datos positivos explicitos lo calculamos
             # y redifinimos el total como la suma de todos los positivos y los
@@ -393,17 +396,25 @@ class ResultadosEleccion(TemplateView):
 
         result = expanded_result
 
-        tabla_positivos = {k:v for k,v in result.items() if isinstance(k, Partido)}
 
+        # TODO revisar si opciones contables no asociadas a partido.
 
+        tabla_positivos = OrderedDict(
+            sorted(
+                [(k, v) for k,v in result.items() if isinstance(k, Partido)], 
+                key=lambda x: x[1]["porcentajeTotal"], reverse=True)
+            )
+
+# como se hace para que los "Positivos" estén primeros en la tabla???
+        
         tabla_no_positivos = {k:v for k,v in result.items() if not isinstance(k, Partido)}
         tabla_no_positivos["Positivos"] = {
             "votos": positivos,
-            "porcentajeTotal": f'{positivos*100/total:.2f}'
+            "porcentajeTotal": f'{positivos*100/total:.2f}' if total else '-'
         }
         result_piechart = [
             {'key': str(k),
-             'y': v['votos'],
+             'y': v["votos"],
              'color': k.color if not isinstance(k, str) else '#CCCCCC'} for k, v in tabla_positivos.items()
         ]
         resultados = {'tabla_positivos': tabla_positivos,
@@ -411,10 +422,12 @@ class ResultadosEleccion(TemplateView):
                       'result_piechart': result_piechart,
                       'electores': electores,
                       'positivos': positivos,
-                      'escrutados': total,
+                      'escrutados': escrutados,
+                      'votantes': total,
                       'proyectado': proyectado,
                       'porcentaje_mesas_escrutadas': porcentaje_mesas_escrutadas,
-                      'participacion': f'{total*100/electores:.2f}' if electores else '-',
+                      'porcentaje_escrutado': f'{escrutados*100/electores:.2f}' if electores else '-',
+                      'porcentaje_participacion': f'{total*100/escrutados:.2f}' if escrutados else '-',
                     }
 
         return resultados

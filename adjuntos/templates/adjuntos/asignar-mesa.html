@@ -11,8 +11,16 @@
 {% block extrahead %}
     <style type="text/css">
 
+
+.acta {
+  position: -webkit-sticky;
+  position: sticky;
+  top: 0;
+}
+
 .left-panel {
-  flex-basis: 50%;
+
+  flex-basis: 40%;
   margin-left: 0.375rem; }
   .left-panel.wide {
     flex-basis: 100%;
@@ -20,8 +28,15 @@
   .left-panel > .card {
     margin-bottom: 0.375rem; }
 
+
+.left-panel > .input_field input{
+  height: 2rem;
+}
+
+
+
 .right-panel {
-  flex-basis: 50%;
+  flex-basis: 60%;
   min-width: 300px;
   margin-left: 0.375rem;
   margin-right: 0.375rem; }
@@ -37,6 +52,7 @@
     margin-right: 0; }
   .left-panel > .card {
     margin-top: 1px; }
+
 
     </style>
 {% endblock %}
@@ -88,17 +104,29 @@
 
 
 {% block right-panel %}
-    <div class="card" style="position: fixed;">
+    <div class="acta card">
 
         <div class="card-content" >
-           <a href="{{ attachment.foto.url }}">ampliar</a>
+           <a href="{{ attachment.foto.url }}" target="new">ampliar</a>
            <img id="target" class="responsive-img" src="{{ attachment.foto.thumbnail.960x.url }}">
 
           <script src="{% static 'js/fabric.js' %}"></script>
           <script src="{% static 'js/darkroom.js' %}"></script>
 
           <script>
-            new Darkroom('#target');
+            new Darkroom('#target', {
+              plugins: {
+                save: {
+                  callback: function() {
+                    this.darkroom.selfDestroy();
+                    var newImage = this.darkroom.canvas.toDataURL();
+                    $.post("{% url 'editar-foto' attachment.id %}", {data: newImage}, function(data){
+                       Materialize.toast(data.message);
+                    })
+                  }
+                }
+              }
+            });
           </script>
         </div>
 

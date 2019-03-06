@@ -8,10 +8,12 @@ class AsignarMesaForm(forms.ModelForm):
         required=False,
         help_text='A que número pertenece esta acta'
     )
+    mesa_confirm = forms.IntegerField(required=False, widget=forms.HiddenInput)
+
 
     class Meta:
         model = Attachment
-        fields = ['mesa', 'problema']
+        fields = ['mesa', 'problema', 'mesa_confirm']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -19,22 +21,24 @@ class AsignarMesaForm(forms.ModelForm):
         self.fields['mesa'].widget.attrs['autofocus'] = True
         self.fields['problema'].widget.attrs['tabindex'] = 99
 
+
     def clean_mesa(self):
         numero = self.cleaned_data['mesa']
         if not numero:
             return numero
         try:
-            mesa = Mesa.objects.get(
-                numero=numero, eleccion__id=1, attachment__isnull=True
-            )
+            mesa = Mesa.objects.get(numero=numero, eleccion__id=1)
         except Mesa.DoesNotExist:
-            raise forms.ValidationError('Esta mesa ya tiene acta adjunta')
+            raise forms.ValidationError('No existe una mesa con este numéro')
         return mesa
+
 
     def clean(self):
         cleaned_data = super().clean()
         problema = cleaned_data.get('problema')
         mesa = cleaned_data.get('mesa')
+        mesa_confirm = cleaned_data.get('mesa_confirm')
+
         if not mesa and not problema:
             self.add_error(
                 'mesa', 'Indicá la mesa o reportá un problema'
@@ -45,7 +49,16 @@ class AsignarMesaForm(forms.ModelForm):
             self.add_error(
                 'problema', 'Dejá el número en blanco si hay un problema'
             )
-            return cleaned_data
+
+        if mesa and Attachment.objects.filter(mesa=mesa).exists() and mesa.numero != mesa_confirm:
+            self.data._mutable = True
+            self.data['mesa_confirm'] = mesa.numero
+            self.data._mutable = False
+            self.add_error(
+                'mesa', 'Esta mesa ya tiene imagen adjunta. Revisá y guardá de nuevo para confirmar'
+            )
+
+        return cleaned_data
 
 
 class SubirAttachmentModelForm(forms.ModelForm):

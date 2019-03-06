@@ -589,6 +589,9 @@ class MesaDetalle(LoginRequiredMixin, MiAsignableMixin, DetailView):
         )
 
 
+
+
+
 @staff_member_required
 def elegir_acta_a_cargar(request, eleccion_id=None):
 
@@ -599,7 +602,7 @@ def elegir_acta_a_cargar(request, eleccion_id=None):
 
     mesas = Mesa.objects.filter(
         votomesareportado__isnull=True,
-        attachment__isnull=False,
+        attachments__isnull=False,
         orden_de_carga__gte=1
     )
 
@@ -677,6 +680,34 @@ def cargar_resultados(request, eleccion_id, mesa_numero):
         request, "fiscales/carga.html",
         {'formset': formset, 'object': mesa}
     )
+
+
+@staff_member_required
+def chequear_resultado(request):
+    mesa = Mesa.objects.filter(votomesareportado__isnull=False, carga_confirmada=False).order_by('?').first()
+    return redirect('chequear-resultado-mesa', eleccion_id=1, mesa_numero=mesa.numero)
+
+
+@staff_member_required
+def chequear_resultado_mesa(request, eleccion_id, mesa_numero):
+    mesa = get_object_or_404(Mesa, eleccion__id=eleccion_id, numero=mesa_numero)
+    data = request.POST if request.method == 'POST' else None
+    if data and 'confirmar' in data:
+
+        mesa.carga_confirmada = True
+        mesa.save(update_fields=['carga_confirmada'])
+        return redirect('chequear-resultado')
+
+    reportados = mesa.votomesareportado_set.all()
+    return render(
+        request,
+        "fiscales/chequeo_mesa.html",
+        {
+            'reportados': reportados,
+            'object': mesa
+        }
+    )
+
 
 
 class CambiarPassword(PasswordChangeView):

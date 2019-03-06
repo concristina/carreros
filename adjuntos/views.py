@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.http import JsonResponse
 from django.urls import reverse
 from django.views.generic.edit import UpdateView
 from django.db.models import Q
@@ -6,6 +7,9 @@ from elecciones.views import StaffOnlyMixing
 from django.contrib.admin.views.decorators import staff_member_required
 from django.utils import timezone
 from datetime import timedelta
+import base64
+from django.core.files.base import ContentFile
+from django.views.decorators.csrf import csrf_exempt
 from .models import Attachment
 from .forms import AsignarMesaForm
 
@@ -56,4 +60,20 @@ class AsignarMesaAdjunto(StaffOnlyMixing, UpdateView):
         # self.instance.mesa = form.cleaned_data['mesa']
         # self.attachment.save(update_fields=['mesa'])
         return super().form_valid(form)
+
+
+@staff_member_required
+@csrf_exempt
+def editar_foto(request, attachment_id):
+    attachment = get_object_or_404(Attachment, id=attachment_id)
+    if request.method == 'POST' and request.POST['data']:
+        data = request.POST['data']
+        file_format, imgstr = data.split(';base64,')
+        extension = file_format.split('/')[-1]
+        attachment.foto_edited = ContentFile(base64.b64decode(imgstr), name=f'edited_{attachment_id}.{extension}')
+        attachment.save(update_fields=['foto_edited'])
+        return JsonResponse({'message': 'Imágen guardada'})
+    return JsonResponse({'message': 'No se pudo guardar la imágen'})
+
+
 

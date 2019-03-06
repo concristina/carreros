@@ -1,6 +1,17 @@
 {% extends "adjuntos/asignar-mesa.html" %}
 {% load i18n material_form material_frontend %}
 
+{% block js %}
+{{ block.super }}
+<script type="text/javascript">
+$(document).ready(function(){
+    $('ul.tabs').tabs();
+  });
+</script>
+{% endblock js %}
+
+
+
 {% block breadcrumbs_items %}
 <a href="{{ object.get_absolute_url }}">{{ object }}</a>
 <a class="active">Acta</a>
@@ -38,20 +49,58 @@
 {% endblock card-action %}
 
 {% block right-panel %}
-    <div class="card" style="position: fixed;">
-
+    <div class="acta card">
 
         <div class="card-content">
 
-            {% if object.foto_del_acta %}
+            <div class="row">
+            <div class="col s12">
+              <ul class="tabs">
+                {% for title, foto in object.fotos %}
 
-           <a href="{{ object.foto_del_acta.url }}">ampliar</a>
-           <img class="responsive-img" src="{{ object.foto_del_acta.thumbnail.960x.url }}">
+                <li class="tab col s3"><a {% if forloop.counter == 1 %}class="active"{% endif %} href="#foto{{ forloop.counter }}">{{ title }}</a></li>
+                {% endfor %}
+              </ul>
+            </div>
+            {% for title, foto in object.fotos %}
+
+
+                <div id="foto{{ forloop.counter }}" class="col s12">
+
+                    <a href="{{ foto.url }}" onclick="return !window.open(this.href, 'Acta mesa Nº {{ object.numero }}', 'width=640,height=600')">ampliar</a>
+
+                    <img class="responsive-img" src="{{ foto.thumbnail.960x.url }}">
+
+                </div>
+            {% endfor %}
+          </div>
+
+
+        {% comment %}
+
+        <div class="col s12">
+            <ul class="tabs">
+                <li class="tab col s3"><a href="#test1">Test 1</a></li>
+                <li class="tab col s3"><a href="#test1">Test 2</a></li>
+            </ul>
+        </div>
+         <div id="test1" class="col s12">
+           {% if object.foto_del_acta %}
+
 
             {% else %}
                 <p>no hay foto de esta acta</p>
 
             {% endif %}
+
+         </div>
+
+         <div id="test2" class="col s12">Test 2</div>
+
+
+        {% endcomment %}
+
+
         </div>
 
     </div>

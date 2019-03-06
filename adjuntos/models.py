@@ -6,7 +6,6 @@ from model_utils import Choices
 from versatileimagefield.fields import VersatileImageField
 
 
-
 class Email(models.Model):
     date = models.CharField(max_length=100)
     from_address = models.CharField(max_length=200)
@@ -40,7 +39,7 @@ class Attachment(models.Model):
         'acta repetida',
         'no es una foto válida',
         'no se entiende',
-        'foto rotada',
+        # 'foto rotada',
     )
 
     email = models.ForeignKey('Email', null=True)
@@ -50,6 +49,12 @@ class Attachment(models.Model):
         width_field='width',
         height_field='height'
         )
+    foto_edited = VersatileImageField(upload_to='attachments/edited',
+        null=True, blank=True,
+        width_field='width',
+        height_field='height'
+    )
+
     height = models.PositiveIntegerField(
         'Image Height',
         blank=True,
@@ -60,7 +65,7 @@ class Attachment(models.Model):
         blank=True,
         null=True
     )
-    mesa = models.OneToOneField('elecciones.Mesa', null=True, related_name='attachment')
+    mesa = models.ForeignKey('elecciones.Mesa', null=True, related_name='attachments')
     taken = models.DateTimeField(null=True)
     problema = models.CharField(max_length=100, null=True, blank=True, choices=PROBLEMAS)
 
@@ -75,7 +80,7 @@ def asignar_orden_de_carga(sender, instance=None, created=False, **kwargs):
     """
     cuando se clasifica el attach, se le asigna el orden siguiente del circuito
     """
-    if instance.mesa:
+    if instance.mesa and not instance.mesa.votomesareportado_set.exists():
         mesa = instance.mesa
         mesa.orden_de_carga = mesa.circuito.proximo_orden_de_carga
         mesa.save(update_fields=['orden_de_carga'])

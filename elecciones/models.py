@@ -9,12 +9,12 @@ from djgeojson.fields import PointField
 from django.template.loader import render_to_string
 from django.utils.safestring import mark_safe
 from django.utils.text import slugify
-
 from django.dispatch import receiver
 from django.db.models.signals import m2m_changed, post_save
 from model_utils.fields import StatusField, MonitorField
 from model_utils import Choices
 
+from adjuntos.models import Attachment
 
 
 def desde_hasta(qs):
@@ -229,6 +229,9 @@ class Mesa(models.Model):
     taken = models.DateTimeField(null=True, editable=False)
     orden_de_carga = models.PositiveIntegerField(default=0, editable=False)
 
+    carga_confirmada = models.BooleanField(default=False)
+
+
     def get_absolute_url(self):
         return reverse('detalle-mesa', args=(self.eleccion.id, self.numero,))
 
@@ -244,13 +247,13 @@ class Mesa(models.Model):
     def tiene_reporte(self):
         return self.votomesareportado_set.aggregate(Sum('votos'))['votos__sum']
 
-    @property
-    def foto_del_acta(self):
-        from adjuntos.models import Attachment
-        try:
-            return self.attachment.foto
-        except Attachment.DoesNotExist:
-            return None
+    def fotos(self):
+        fotos = []
+        for i, a in enumerate(Attachment.objects.filter(mesa=self).order_by('-id'), 1):
+            if a.foto_edited:
+                fotos.append((f'Foto {i} (editada)', a.foto_edited))
+            fotos.append((f'Foto {i} (original)', a.foto))
+        return fotos
 
     @property
     def proximo_estado(self):
