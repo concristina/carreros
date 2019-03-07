@@ -27,19 +27,12 @@ urlpatterns = [
     url(r'', include('django.contrib.auth.urls')),
     url(r'^hijack/', include('hijack.urls')),
 
-
-    # url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
-    # url(r'^api/v1/', include('api.urls', namespace='api_v1')),
-    # url(r'^admin/exportar-emails/', exportar_emails),
-    # url(r'^admin/fiscales-por-seccion/', datos_fiscales_por_seccion),
-    # url(r'^admin/asignar_referentes/', views_elecciones.asignar_referentes, name='asignar-referentes'),
     url(r'^admin/', admin.site.urls),
     url(r'^fiscales/', include(fiscales_urls)),
     url(r'^elecciones/', include(elecciones_urls)),
 
     url(r'^clasificar-actas/', include('adjuntos.urls')),
     url('^resultados/(?P<slug>\w+)/$', cached(views_elecciones.ResultadosEleccion.as_view()), name='resultados-eleccion'),
-    # url('^resultados$', cached(views_elecciones.Resultados.as_view()), name='resultados'),
 ]
 
 if settings.DEBUG:

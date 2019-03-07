@@ -37,8 +37,7 @@ class Seccion(models.Model):
 
 
     def resultados_url(self):
-        #return reverse('resultados-por', args=('seccion', self.numero, slugify(self.nombre)))
-        return reverse('resultados') + f'?seccion={self.id}'
+        return reverse('resultados-eleccion') + f'?seccion={self.id}'
 
 
     def __str__(self):
@@ -105,7 +104,7 @@ class Circuito(models.Model):
         #    'resultados-por',
         #    args=('circuito', self.numero, slugify(self.nombre))
         #)
-        return reverse('resultados') + f'?circuito={self.id}'
+        return reverse('resultados-eleccion') + f'?circuito={self.id}'
 
 
     @property
@@ -259,10 +258,6 @@ class Mesa(models.Model):
         return self.asignacion.order_by('-ingreso').last()
 
     @property
-    def computados(self):
-        return self.votomesaoficial_set.aggregate(Sum('votos'))['votos__sum']
-
-    @property
     def tiene_reporte(self):
         return self.votomesareportado_set.aggregate(Sum('votos'))['votos__sum']
 
@@ -347,7 +342,7 @@ class Eleccion(models.Model):
     opciones = models.ManyToManyField(Opcion, related_name='elecciones')
 
     def get_absolute_url(self):
-        return reverse('resultados-eleccion', args=[self.slug])
+        return reverse('resultados-eleccion')   # , args=[self.slug])
 
     @classmethod
     def opciones_actuales(cls):

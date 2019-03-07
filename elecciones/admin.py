@@ -111,7 +111,7 @@ def resultados_reportados(modeladmin, request, queryset):
     selected = request.POST.getlist(admin.ACTION_CHECKBOX_NAME)
     name = modeladmin.model.__name__.lower()
     ids = "&".join(f'{name}={s}' for s in selected)
-    res_url = reverse('resultados')
+    res_url = reverse('resultados-eleccion')
     return HttpResponseRedirect(f'{res_url}?{ids}')
 
 resultados_reportados.short_description = "Ver Resultados Reportados"
@@ -182,6 +182,7 @@ class MesaAdmin(AdminRowActionsMixin, admin.ModelAdmin):
         'lugar_votacion__ciudad', 'lugar_votacion__barrio',
     )
 
+
     def get_row_actions(self, obj):
         row_actions = [
             {
@@ -190,15 +191,10 @@ class MesaAdmin(AdminRowActionsMixin, admin.ModelAdmin):
                 'enabled': True,
             },
             {
-                'label': 'Resultados',
-                'url': reverse('resultados-mapa') + f'?mesa={obj.id}',
-                'enabled': obj.computados or obj.tiene_reporte,
-            },
-            {
                 'label': 'Resultados Reportados',
-                'url': reverse('resultados') + f'?mesa={obj.id}',
-                'enabled': obj.computados or obj.tiene_reporte,
-            }
+                'url': reverse('resultados-eleccion') + f'?mesa={obj.id}',
+                'enabled': obj.tiene_reporte,
+            },
         ]
         if obj.asignacion_actual:
             url = reverse('admin:fiscales_asignacionfiscaldemesa_change', args=(obj.asignacion_actual.id,))
@@ -213,7 +209,6 @@ class MesaAdmin(AdminRowActionsMixin, admin.ModelAdmin):
             'url': url,
             'enabled': True
         })
-
         row_actions += super().get_row_actions(obj)
         return row_actions
 

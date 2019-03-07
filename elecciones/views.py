@@ -51,56 +51,10 @@ class LugaresVotacionGeoJSON(GeoJSONLayerView):
         return qs
 
 
-class ResultadosOficialesGeoJSON(GeoJSONLayerView):
-    model = LugarVotacion
-    properties = ('id', 'nombre', 'direccion_completa',
-                  'seccion', 'circuito', 'resultados_oficiales')
-
-    def get_queryset(self):
-        qs = super().get_queryset()
-        if 'seccion' in self.request.GET:
-            return qs.filter(circuito__seccion__id__in=self.request.GET.getlist('seccion'))
-        elif 'circuito' in self.request.GET:
-            return qs.filter(circuito__id__in=self.request.GET.getlist('circuito'))
-        elif 'lugarvotacion' in self.request.GET:
-            return qs.filter(id__in=self.request.GET.getlist('lugarvotacion'))
-
-        elif 'mesa' in self.request.GET:
-            return qs.filter(mesas__id__in=self.request.GET.getlist('mesa')).distinct()
-
-        return qs
-
-
 class EscuelaDetailView(StaffOnlyMixing, DetailView):
     template_name = "elecciones/detalle_escuela.html"
     model = LugarVotacion
 
-
-class ResultadoEscuelaDetailView(StaffOnlyMixing, DetailView):
-    template_name = "elecciones/resultados_escuela.html"
-    model = LugarVotacion
-
-
-    def get_context_data(self, **kwargs):
-
-        context = super().get_context_data(**kwargs)
-        sum_por_partido = {}
-        for nombre, id in Partido.objects.values_list('nombre', 'id'):
-            sum_por_partido[nombre] = Sum(Case(When(opcion__partido__id=id, then=F('votos')),
-                             output_field=IntegerField()))
-
-        for nombre, id in Opcion.objects.filter(id__in=[16, 17, 18, 19]).values_list('nombre', 'id'):
-            sum_por_partido[nombre] = Sum(Case(When(opcion__id=id, then=F('votos')),
-                             output_field=IntegerField()))
-
-
-        result = VotoMesaOficial.objects.filter(mesa__eleccion__id=1, mesa__lugar_votacion=self.object).aggregate(
-            **sum_por_partido
-        )
-        total = sum(v for v in result.values() if v)
-        result = {k: (v, f'{v*100/total:.2f}') for k, v in result.items() if v}
-        context['resultados'] = result
-        return context
 
 
 class Mapa(StaffOnlyMixing, TemplateView):
@@ -119,132 +73,6 @@ class Mapa(StaffOnlyMixing, TemplateView):
             geojson_url += f'?{query}'
 
         context['geojson_url'] = geojson_url
-        return context
-
-
-class MapaResultadosOficiales(StaffOnlyMixing, TemplateView):
-    template_name = "elecciones/mapa_resultados.html"
-
-
-    @classmethod
-    @lru_cache(128)
-    def agregaciones_por_partido(cls):
-        sum_por_partido = {}
-        otras_opciones = {}
-        for id in Partido.objects.values_list('id', flat=True):
-            sum_por_partido[str(id)] = Sum(Case(When(opcion__partido__id=id, then=F('votos')),
-                                                output_field=IntegerField()))
-
-        for nombre, id in Opcion.objects.filter(opcion__partido__isnull=True).values_list('nombre', 'id'):
-            otras_opciones[nombre] = Sum(Case(When(opcion__id=id, then=F('votos')),
-                                              output_field=IntegerField()))
-
-        return sum_por_partido, otras_opciones
-
-    @property
-    @lru_cache(128)
-    def filtros(self):
-        """a partir de los argumentos de urls, devuelve
-        listas de seccion / circuito etc. para filtrar """
-        if 'seccion' in self.request.GET:
-            return Seccion.objects.filter(id__in=self.request.GET.getlist('seccion'))
-        elif 'circuito' in self.request.GET:
-            return Circuito.objects.filter(id__in=self.request.GET.getlist('circuito'))
-        elif 'lugarvotacion' in self.request.GET:
-            return LugarVotacion.objects.filter(id__in=self.request.GET.getlist('lugarvotacion'))
-        elif 'mesa' in self.request.GET:
-            return Mesa.objects.filter(id__in=self.request.GET.getlist('mesa'))
-
-    @property
-    @lru_cache(128)
-    def electores(self):
-        lookups = Q()
-        meta = {}
-        for eleccion in Eleccion.objects.all():
-
-            if self.filtros:
-                if 'seccion' in self.request.GET:
-                    lookups = Q(circuito__seccion__in=self.filtros)
-
-                elif 'circuito' in self.request.GET:
-                    lookups = Q(circuito__in=self.filtros)
-
-                elif 'lugarvotacion' in self.request.GET:
-                    lookups = Q(id__in=self.filtros)
-
-                elif 'mesa' in self.request.GET:
-                        lookups = Q(mesas__id__in=self.filtros, mesas__eleccion=eleccion)
-
-            escuelas = LugarVotacion.objects.filter(lookups).distinct()
-            electores = escuelas.aggregate(v=Sum('electores'))['v']
-            if electores and 'mesa' in self.request.GET:
-                # promediamos los electores por mesa
-                electores = electores * self.filtros.count() // Mesa.objects.filter(lugar_votacion__in=escuelas, eleccion=eleccion).count()
-            meta[eleccion] = electores or 0
-        return meta
-
-
-    def get_resultados(self):
-        lookups = Q()
-        resultados = {}
-        sum_por_partido, otras_opciones = MapaResultadosOficiales.agregaciones_por_partido()
-        for eleccion in Eleccion.objects.all():
-            if self.filtros:
-                if 'seccion' in self.request.GET:
-                    lookups = Q(mesa__lugar_votacion__circuito__seccion__in=self.filtros)
-
-                elif 'circuito' in self.request.GET:
-                    lookups = Q(mesa__lugar_votacion__circuito__in=self.filtros)
-
-                elif 'lugarvotacion' in self.request.GET:
-                    lookups = Q(mesa__lugar_votacion__in=self.filtros)
-
-                elif 'mesa' in self.request.GET:
-                    lookups = Q(mesa__id__in=self.filtros)
-
-            electores = self.electores[eleccion]
-            # primero para partidos
-            result = VotoMesaReportado.objects.filter(
-                Q(mesa__eleccion=eleccion) & lookups
-            ).aggregate(
-                **sum_por_partido
-            )
-            result = {
-                Partido.objects.get(id=k): v for k, v in result.items() if v is not None
-            }
-
-
-            # no positivos
-            result_opc = VotoMesaReportado.objects.filter(
-                Q(mesa__eleccion=eleccion) & lookups
-            ).aggregate(
-                **otras_opciones
-            )
-            result_opc = {k: v for k, v in result_opc.items() if v is not None}
-            # result.update(result_opc)
-
-
-            result = {k: (v, f'{v*100/total:.2f}') for k, v in result.items()}
-
-            result_piechart = [{'key': k, 'y': v[0]} for k, v in result.items()]
-
-            resultados[eleccion] = {'tabla': result,
-                                    'electores': electores,
-                                    'positivos': positivos,
-                                    'escrutados': total,
-                                    'porcentaje_escrutado': f'{total*100/electores:.2f}'} if electores else '-'
-        return resultados
-
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['geojson_url'] = reverse("resultados-geojson", args=['paso2017']) + f'?{self.request.GET.urlencode()}'
-        if self.filtros:
-            context['para'] = get_text_list(list(self.filtros), " y ")
-        else:
-            context['para'] = 'Neuquén'
-
-        context['resultados'] = self.get_resultados()
         return context
 
 
@@ -456,7 +284,7 @@ class ResultadosEleccion(TemplateView):
             context['para'] = get_text_list([o.nombre for o in self.filtros], " y ")
         else:
             context['para'] = 'Neuquén'
-        eleccion = get_object_or_404(Eleccion, slug=self.kwargs["slug"])
+        eleccion = get_object_or_404(Eleccion, id=1)
         context['object'] = eleccion
         context['eleccion_id'] = eleccion.id
         context['resultados'] = self.get_resultados(eleccion)
@@ -466,52 +294,12 @@ class ResultadosEleccion(TemplateView):
         context['chart_keys'] = [v['key'] for v in chart]
         context['chart_colors'] = [v['color'] for v in chart]
 
-        context['elecciones'] = [Eleccion.objects.get(id=1)]
+        context['elecciones'] = [Eleccion.objects.get(id=1)]        # categorias
         context['secciones'] = Seccion.objects.all()
         context['agrupacionpk'] = AgrupacionPK.objects.all()
 
         return context
 
-
-
-class Resultados(LoginRequiredMixin, TemplateView):
-    template_name = "elecciones/resultados.html"
-
-    @property
-    def filtros(self):
-        """a partir de los argumentos de urls, devuelve
-        listas de seccion / circuito etc. para filtrar """
-        if 'seccion' in self.request.GET:
-            return Seccion.objects.filter(id__in=self.request.GET.getlist('seccion'))
-        elif 'circuito' in self.request.GET:
-            return Circuito.objects.filter(id__in=self.request.GET.getlist('circuito'))
-        elif 'lugarvotacion' in self.request.GET:
-            return LugarVotacion.objects.filter(id__in=self.request.GET.getlist('lugarvotacion'))
-        elif 'mesa' in self.request.GET:
-            return Mesa.objects.filter(numero__in=self.request.GET.getlist('mesa'))
-
-    def menu_activo(self):
-        if not self.filtros:
-            return []
-        elif isinstance(self.filtros[0], Seccion):
-            return (self.filtros[0], None)
-#        elif isinstance(self.filtros[0], AgrupacionPK):
-#            return (self.filtros[0], None)
-        elif isinstance(self.filtros[0], Circuito):
-            return (self.filtros[0].seccion, self.filtros[0])
-
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        if self.filtros:
-            context['para'] = get_text_list(list(self.filtros), " y ")
-        else:
-            context['para'] = 'Neuquén'
-        context['elecciones'] = Eleccion.objects.filter(id=1)
-        context['secciones'] = Seccion.objects.all()
-        context['menu_activo'] = self.menu_activo()
-
-        return context
 
 
 class ResultadosProyectadosEleccion(StaffOnlyMixing, TemplateView):
