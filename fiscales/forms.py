@@ -8,6 +8,7 @@ from elecciones.models import Mesa, VotoMesaReportado, Eleccion, LugarVotacion, 
 from localflavor.ar.forms import ARDNIField
 from django.contrib.auth.forms import AuthenticationForm
 from django.utils.translation import ugettext_lazy as _
+from django.core.validators import ValidationError
 from prensa.forms import validar_telefono
 import phonenumbers
 from elecciones.views import POSITIVOS, TOTAL
@@ -212,6 +213,7 @@ class VotoMesaModelForm(forms.ModelForm):
 class BaseVotoMesaReportadoFormSet(BaseModelFormSet):
 
     def __init__(self, *args, **kwargs):
+        self.mesa = kwargs.pop('mesa')
         super().__init__(*args, **kwargs)
         self.warnings = []
 
@@ -236,12 +238,17 @@ class BaseVotoMesaReportadoFormSet(BaseModelFormSet):
         #     form_opcion_positivos.add_error('votos',
         #         f'Positivos deberia ser igual o mayor a {suma}')
 
-        if suma > total:
-            # form_opcion_total.add_error(
-            #    'votos', 'El total no corresponde a la cantidad de sobres'
-            # )
-            form_opcion_total.add_error('votos',
-                f'Total deberia ser igual a {suma}')
+        errors = []
+
+        if suma > self.mesa.electores:
+            errors.append(f'Total no puede ser mayor a la cantidad de electores de la mesa: {self.mesa.electores}')
+
+        elif suma != total:
+            errors.append(f'Total deberia ser igual a la suma: {suma}')
+
+        if errors:
+            form_opcion_total.add_error('votos', ValidationError(errors)                )
+
 
 
 VotoMesaReportadoFormset = modelformset_factory(

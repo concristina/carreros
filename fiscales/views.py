@@ -635,7 +635,7 @@ def cargar_resultados(request, eleccion_id, mesa_numero):
     data = request.POST if request.method == 'POST' else None
     qs = VotoMesaReportado.objects.filter(mesa=mesa, fiscal=fiscal)
     initial = [{'opcion': o} for o in Eleccion.opciones_actuales()]
-    formset = VotoMesaReportadoFormset(data, queryset=qs, initial=initial)
+    formset = VotoMesaReportadoFormset(data, queryset=qs, initial=initial, mesa=mesa)
 
     fix_opciones(formset)
     is_valid = False
@@ -654,14 +654,12 @@ def cargar_resultados(request, eleccion_id, mesa_numero):
             # vmr.eleccion = eleccion
             vmr.save()
 
-
-            messages.success(request, 'Guardados los resultados de la mesa ')
-
+        messages.success(request, 'Guardados los resultados de la mesa ')
         return redirect('elegir-acta-a-cargar')
 
     return render(
         request, "fiscales/carga.html",
-        {'formset': formset, 'object': mesa}
+        {'formset': formset, 'object': mesa, 'is_valid': is_valid or request.method == 'GET'}
     )
 
 

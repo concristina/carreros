@@ -1,12 +1,25 @@
 {% extends "adjuntos/asignar-mesa.html" %}
-{% load i18n material_form material_frontend %}
+{% load i18n material_form material_frontend staticfiles %}
 
 {% block js %}
 {{ block.super }}
+
 <script type="text/javascript">
+
 $(document).ready(function(){
     $('ul.tabs').tabs();
-  });
+
+    {% if not is_valid %}
+    $('html, body').animate({
+        scrollTop: $(".has-error").first().offset().top - 70
+    }, 2000);
+
+    // arreglar esta bosta!
+    $(".has-error").first().children('input').focus();
+
+{% endif %}
+
+});
 </script>
 {% endblock js %}
 
@@ -44,6 +57,12 @@ $(document).ready(function(){
             </div>
 
         </div>
+
+        <div class="row">
+            <div class="col s12">
+            </div>
+        </div>
+
 
     </div>
 {% endblock card-action %}

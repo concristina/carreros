@@ -40,7 +40,6 @@ class Email(models.Model):
 
 class Attachment(models.Model):
     PROBLEMAS = Choices(
-        'acta repetida',
         'no es una foto válida',
         'no se entiende',
         # 'foto rotada',
