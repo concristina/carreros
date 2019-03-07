@@ -178,8 +178,8 @@ class LugarVotacion(models.Model):
 
     @property
     def color(self):
-        if self.mesa.foto_del_acta:
-            return 'blue'
+        if VotoMesaReportado.objects.filter(mesa__lugar_votacion=self).exists():
+            return 'green'
         return 'orange'
 
     @property
