@@ -56,5 +56,6 @@ def full_deploy():
         run("git pull")
         run(f"{VENV}bin/pip install -r requirements.txt")
     manage("migrate")
+    manage("loaddata fixtures/neuquen.json")
     manage("collectstatic --noinput")
     run("supervisorctl restart neuquen")
