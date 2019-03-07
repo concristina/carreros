@@ -24,7 +24,7 @@
             <div class="collapsible-body">
               <ul>
                 {% for circuito in seccion.circuito_set.all %}
-                    <li><a href="{{ request.path }}?circuito={{ circuito.id }}">{{ circuito }}</a></li>
+                    <li><a href="{{ request.path }}?circuito={{ circuito.id }}">{{ circuito.nombre }}</a></li>
                 {% endfor %}
               </ul>
             </div>

@@ -85,7 +85,7 @@ class Circuito(models.Model):
     class Meta:
         verbose_name = 'Circuito electoral'
         verbose_name_plural = 'Circuitos electorales'
-        ordering = ('numero',)
+        ordering = ('id',)
 
     def __str__(self):
         return f"{self.numero} - {self.nombre}"
