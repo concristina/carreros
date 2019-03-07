@@ -410,7 +410,7 @@ class ResultadosEleccion(TemplateView):
             }
             if (proyectado):
                 expanded_result[k]["proyeccion"] = f'{v*100/positivos:.2f}'
-   
+
 
         result = expanded_result
 
@@ -419,12 +419,12 @@ class ResultadosEleccion(TemplateView):
 
         tabla_positivos = OrderedDict(
             sorted(
-                [(k, v) for k,v in result.items() if isinstance(k, Partido)], 
-                key=lambda x: x[1]["porcentajeTotal"], reverse=True)
+                [(k, v) for k,v in result.items() if isinstance(k, Partido)],
+                key=lambda x: x[1]["votos"], reverse=True)
             )
 
         # como se hace para que los "Positivos" estén primeros en la tabla???
-        
+
         tabla_no_positivos = {k:v for k,v in result.items() if not isinstance(k, Partido)}
         tabla_no_positivos["Positivos"] = {
             "votos": positivos,
