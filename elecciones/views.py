@@ -204,8 +204,6 @@ class ResultadosEleccion(TemplateView):
         return datos_ponderacion
 
 
-
-
     def get_resultados(self, eleccion):
         lookups = Q()
         lookups2 = Q()
@@ -309,14 +307,16 @@ class ResultadosEleccion(TemplateView):
                 # Sería multiplicar dos columnas y sumar.
                 acumulador_total = 0
                 acumulador_positivos = 0
+                electores_pond = 0
                 for ag in agrupaciones:
                     if k in datos_ponderacion[ag]:
                         data = datos_ponderacion[ag][k]
+                        electores_pond += data["electores"]
                         acumulador_total += data["electores"]*data["votos"]/data["total"]
                         acumulador_positivos += data["electores"]*data["votos"]/data["positivos"]
 
-                expanded_result[k]["proyeccionTotal"] = f'{acumulador_total *100/electores:.2f}'
-                expanded_result[k]["proyeccion"] = f'{acumulador_positivos *100/electores:.2f}'
+                expanded_result[k]["proyeccionTotal"] = f'{acumulador_total *100/electores_pond:.2f}'
+                expanded_result[k]["proyeccion"] = f'{acumulador_positivos *100/electores_pond:.2f}'
 
 
         result = expanded_result
