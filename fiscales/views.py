@@ -199,6 +199,10 @@ class QuieroSerFiscal(SessionWizardView):
         })
 
 
+def email(request):
+    return render(request, 'fiscales/email.html', {'fiscal': request.user.fiscal})
+
+
 def confirmar_email(request, uuid):
     fiscal = get_object_or_None(Fiscal, codigo_confirmacion=uuid)
     if not fiscal:
@@ -221,13 +225,6 @@ def confirmar_email(request, uuid):
         {'texto': texto, 'fiscal': fiscal}
     )
 
-
-
-
-def email(request):
-    html = render_to_string('fiscales/email.html', {'nombre': 'Pedro'})
-    return HttpResponse(html2text(html), content_type='plain/text')
-    # return render(request, 'fiscales/email.html', {})
 
 
 class MisDatos(BaseFiscal):

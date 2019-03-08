@@ -4,6 +4,7 @@ from . import views
 
 
 urlpatterns = [
+    # url('^email$', views.email),
     url('^mis-datos$', views.MisDatos.as_view(), name='mis-datos'),
     url('^mis-contactos', views.MisContactos.as_view(), name='mis-contactos'),
     url('^mis-voluntarios', views.MisVoluntarios.as_view(), name='mis-voluntarios'),
