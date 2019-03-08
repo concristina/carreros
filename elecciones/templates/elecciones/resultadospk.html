@@ -52,8 +52,22 @@
             <div class="card-content" id="frame{{eleccion.id}}">
 
               {% if resultados.tabla_positivos %}
+                {% if resultados.proyectado %}
+                  {% if resultados.proyeccion_incompleta  %}
+                    <h4 style="background-color: red"> Proyección de datos incompleta </h4>
+                    <h5> Con un total de {{ resultados.porcentaje_mesas_escrutadas }}% de mesas escrutadas, restan de cargar datos en </h5>
+                      {% for ag in resultados.proyeccion_incompleta %}
+                        <li> {{ ag|safe }}</li>
+                      {% endfor %}
 
-              <h4>Sobre un {{ resultados.porcentaje_mesas_escrutadas }}% de mesas escrutadas </h4>
+                  {% else %}
+                    <h4>Proyección de datos sobre un {{ resultados.porcentaje_mesas_escrutadas }}% de mesas escrutadas </h4>
+                  {% endif %}
+
+                {% else %}
+                    <h4>Sobre un {{ resultados.porcentaje_mesas_escrutadas }}% de mesas escrutadas </h4>
+
+                {% endif %}
 
 
 

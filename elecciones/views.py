@@ -150,7 +150,7 @@ class ResultadosEleccion(TemplateView):
         return electores or 0
 
     def resultado_agrupacion(self, eleccion, agrupacion, sum_por_partido, otras_opciones):
-        resumen = {}
+#        resumen = {}
         mesas_agrupacion = Mesa.objects.filter(
             lugar_votacion__circuito__seccion_de_ponderacion=agrupacion
         )
@@ -187,18 +187,13 @@ class ResultadosEleccion(TemplateView):
             result['Otros partidos'] = positivos - sum(result.values())
             result['Blancos, impugnados, etc'] = total - positivos
 
-        datos_ponderacion = {}
-        for k, v in result.items():
-
-            porcentaje_total = v*100/total if total else '-'
-            porcentaje_positivos = v*100/positivos if positivos and isinstance(k, Partido) else '-'
-
-            datos_ponderacion[k] = {
-                "electores": electores,
-                "votos": v,
-                "total": total,
-                "positivos": positivos
-            }
+        datos_ponderacion = {
+            "electores": electores,
+            "escrutados": escrutados,
+            "votos": result,
+            "total": total,
+            "positivos": positivos
+        }
 
 
         return datos_ponderacion
@@ -286,9 +281,18 @@ class ResultadosEleccion(TemplateView):
             # solo provincias
             agrupaciones = AgrupacionPK.objects.all().order_by("numero")
             datos_ponderacion = {}
+
+            electores_pond = 0
+            proyeccion_incompleta = []
             for ag in agrupaciones:
                 datos_ponderacion[ag] = self.resultado_agrupacion(eleccion, ag, sum_por_partido, otras_opciones)
+                if datos_ponderacion[ag]["escrutados"] is None:
+                    proyeccion_incompleta.append(f"{ag}") 
+#                    proyeccion_incompleta.append(str(ag.numero)+"-"+ag.nombre)
+                else:
+                    electores_pond += datos_ponderacion[ag]["electores"]
 
+            print(proyeccion_incompleta)
 
         expanded_result = {}
         for k, v in result.items():
@@ -301,22 +305,18 @@ class ResultadosEleccion(TemplateView):
                 "porcentajePositivos": porcentaje_positivos
             }
             if proyectado:
-                ########## acá hay que agregar al if, si la vista es provincia. Si no, no tiene sentido.
-
-                # Lo que está en este form no sé si se puede hacer con una sula fórmula :)
-                # Sería multiplicar dos columnas y sumar.
                 acumulador_total = 0
                 acumulador_positivos = 0
-                electores_pond = 0
                 for ag in agrupaciones:
-                    if k in datos_ponderacion[ag]:
-                        data = datos_ponderacion[ag][k]
-                        electores_pond += data["electores"]
-                        acumulador_total += data["electores"]*data["votos"]/data["total"]
-                        acumulador_positivos += data["electores"]*data["votos"]/data["positivos"]
+                    data = datos_ponderacion[ag]
+                    if k in data["votos"]:
+                        acumulador_total += data["electores"]*data["votos"][k]/data["total"]
+                        acumulador_positivos += data["electores"]*data["votos"][k]/data["positivos"]
+
 
                 expanded_result[k]["proyeccionTotal"] = f'{acumulador_total *100/electores_pond:.2f}'
                 expanded_result[k]["proyeccion"] = f'{acumulador_positivos *100/electores_pond:.2f}'
+
 
 
         result = expanded_result
@@ -354,6 +354,8 @@ class ResultadosEleccion(TemplateView):
                       'porcentaje_escrutado': f'{escrutados*100/electores:.2f}' if electores else '-',
                       'porcentaje_participacion': f'{total*100/escrutados:.2f}' if escrutados else '-',
                     }
+        if proyectado:
+            resultados["proyeccion_incompleta"] = proyeccion_incompleta
 
         return resultados
 
