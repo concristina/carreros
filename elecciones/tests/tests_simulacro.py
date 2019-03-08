@@ -555,4 +555,38 @@ def test_proyeccion(fiscal_client, carta_marina_oficial):
     resultados = fiscal_client.get('/elecciones/resultados/?proyectado=1').context['resultados']
     resultados_pk = fiscal_client.get('/elecciones/resultadospk/?proyectado=1').context['resultados']
 
-    # ver https://gist.github.com/mgaitan/289aa9a7dcaf3d28efe38fb6e0c32d48
+    # ver data completa en https://gist.github.com/mgaitan/289aa9a7dcaf3d28efe38fb6e0c32d48
+
+    tabla_positivos = list(resultados['tabla_positivos'].items())
+
+    partido, fila = tabla_positivos[0]        #
+    assert partido.nombre == 'Movimiento Popular Neuquino y Otros - Gutiérrez'
+    assert fila['proyeccion'] == '31.75'
+
+    partido, fila = tabla_positivos[1]        #
+    assert partido.nombre == 'Unidad Ciudadana Frente Neuquino - Rioseco'
+    assert fila['proyeccion'] == '28.65'
+
+    partido, fila = tabla_positivos[2]
+    assert partido.nombre == 'Cambiemos - Quiroga'
+    assert fila['proyeccion'] == '24.90'
+
+    # pk
+    tabla_positivos = list(resultados_pk['tabla_positivos'].items())
+
+    partido, fila = tabla_positivos[0]        #
+    assert partido.nombre == 'Movimiento Popular Neuquino y Otros - Gutiérrez'
+    assert fila['proyeccion'] == '31.75'
+
+    partido, fila = tabla_positivos[1]        #
+    assert partido.nombre == 'Unidad Ciudadana Frente Neuquino - Rioseco'
+    assert fila['proyeccion'] == '28.65'
+
+    partido, fila = tabla_positivos[2]
+    assert partido.nombre == 'Cambiemos - Quiroga'
+    assert fila['proyeccion'] == '24.90'
+
+
+
+
+
