@@ -147,23 +147,20 @@ class ResultadosEleccion(TemplateView):
         electores = mesas.aggregate(v=Sum('electores'))['v']
         return electores or 0
 
-    def resultado_agrupacion(self, eleccion, agrupacion):
+    def resultado_agrupacion(self, eleccion, agrupacion, sum_por_partido, otras_opciones):
         resumen = {}
 
-        lookups = Q()
-        lookups = Q(mesa__lugar_votacion__circuito__seccion_de_ponderacion__in=agrupacion)
 
-        mesas_agrupacion = Mesa.objects.filter(eleccion=eleccion).filter(lookups).distinct()
-        electores = mesas.aggregate(v=Sum('electores'))['v']
+        mesas_agrupacion = Mesa.objects.filter(
+            lugar_votacion__circuito__seccion_de_ponderacion=agrupacion
+        ).distinct()
+        mesas_escrutadas = mesas_agrupacion.filter(votomesareportado__isnull=False)
 
-        reportados = VotoMesaReportado.objects.filter(Q(mesa__eleccion=eleccion) & lookups)
-
-        todas_mesas_escrutadas = Mesa.objects.filter(votomesareportado__in=reportados).distinct()
-        escrutados = todas_mesas_escrutadas.aggregate(v=Sum('electores'))['v']
-
-#        mesas_escrutadas = todas_mesas_escrutadas.count()
-#        total_mesas = Mesa.objects.filter(lookups2, eleccion__id=eleccion).count()
-#        porcentaje_mesas_escrutadas = f'{mesas_escrutadas*100/total_mesas:.2f}'
+        electores = mesas_agrupacion.aggregate(v=Sum('electores'))['v']
+        escrutados = mesas_escrutadas.aggregate(v=Sum('electores'))['v']
+        reportados = VotoMesaReportado.objects.filter(
+            mesa__lugar_votacion__circuito__seccion_de_ponderacion=agrupacion
+        )
 
 
         result = reportados.aggregate(
@@ -172,9 +169,7 @@ class ResultadosEleccion(TemplateView):
         result = {Partido.objects.get(id=k): v for k, v in result.items() if v is not None}
 
         # no positivos
-        result_opc = VotoMesaReportado.objects.filter(
-            Q(mesa__eleccion=eleccion) & lookups
-        ).aggregate(
+        result_opc = reportados.aggregate(
             **otras_opciones
         )
         result_opc = {k: v for k, v in result_opc.items() if v is not None}
@@ -216,7 +211,7 @@ class ResultadosEleccion(TemplateView):
         lookups = Q()
         lookups2 = Q()
         resultados = {}
-        proyectado = 'proyectado' in self.request.GET
+        proyectado = 'proyectado' in self.request.GET and not self.filtros
 
         sum_por_partido, otras_opciones = ResultadosEleccion.agregaciones_por_partido(eleccion)
 
@@ -289,14 +284,14 @@ class ResultadosEleccion(TemplateView):
         else:
             result['Otros partidos'] = positivos - sum(result.values())
             result['Blancos, impugnados, etc'] = total - positivos
-##########
-        if (proyectado):
-            ########## acá hay que agregar al if, si la vista es provincia. Si no, no tiene sentido.
-            agrupaciones = list(AgrupacionPK.objects.all().order_by("numero"))
+
+        if proyectado:
+            # solo provincias
+            agrupaciones = AgrupacionPK.objects.all().order_by("numero")
             datos_ponderacion = {}
             for ag in agrupaciones:
-                datos_ponderacion[ag] = self.resultado_agrupacion(eleccion,ag)
-##########
+                datos_ponderacion[ag] = self.resultado_agrupacion(eleccion, ag, sum_por_partido, otras_opciones)
+
 
         expanded_result = {}
         for k, v in result.items():
@@ -308,16 +303,19 @@ class ResultadosEleccion(TemplateView):
                 "porcentajeTotal": porcentaje_total,
                 "porcentajePositivos": porcentaje_positivos
             }
-            if (proyectado):
+            if proyectado:
                 ########## acá hay que agregar al if, si la vista es provincia. Si no, no tiene sentido.
 
                 # Lo que está en este form no sé si se puede hacer con una sula fórmula :)
                 # Sería multiplicar dos columnas y sumar.
                 acumulador_total = 0
                 acumulador_positivos = 0
+                import ipdb; ipdb.set_trace()
                 for ag in agrupaciones:
-                    acumulador_total += datos_ponderacion[ag][k]["electores"]*datos_ponderacion[ag][k]["votos"]/datos_ponderacion[ag][k]["total"]
-                    acumulador_positivos += datos_ponderacion[ag][k]["electores"]*datos_ponderacion[ag][k]["votos"]/datos_ponderacion[ag][k]["positivos"]
+                    if k in datos_ponderacion[ag]:
+                        data = datos_ponderacion[ag][k]
+                        acumulador_total += data["electores"]*data["votos"]/data["total"]
+                        acumulador_positivos += data["electores"]*data["votos"]/data["positivos"]
 
                 expanded_result[k]["proyeccionTotal"] = f'{acumulador_total *100/electores:.2f}'
                 expanded_result[k]["proyeccion"] = f'{acumulador_positivos *100/electores:.2f}'
