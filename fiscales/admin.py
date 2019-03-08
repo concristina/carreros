@@ -25,6 +25,25 @@ class ContactoAdminInline(GenericTabularInline):
     form = DatoDeContactoModelForm
 
 
+class EsStaffFilter(admin.SimpleListFilter):
+    title = 'Es Staff'
+    parameter_name = 'es_staff'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('sí', 'sí'),
+            ('no', 'no'),
+        )
+
+    def queryset(self, request, queryset):
+        value = self.value()
+        if value == "sí":
+            queryset = queryset.filter(user__is_staff=True)
+        elif value == "no":
+            queryset = queryset.filter(user__is_staff=False)
+        return queryset
+
+
 class AsignadoFilter(admin.SimpleListFilter):
     title = 'Asignación'
     parameter_name = 'asignado'
@@ -86,9 +105,16 @@ def exportar_email_fiscales(modeladmin, request, queryset):
 
 exportar_email_fiscales.short_description = "Exportar Email Fiscales"
 
+def hacer_staff(modeladmin, request, queryset):
+    for f in queryset:
+        f.user.is_staff = True
+        f.save(update_field=['user'])
+
+hacer_staff.short_description = "Hacer staff (dataentry)"
+
 
 class FiscalAdmin(AdminRowActionsMixin, admin.ModelAdmin):
-    actions = [exportar_email_fiscales]
+    actions = [exportar_email_fiscales, hacer_staff]
     def get_row_actions(self, obj):
         row_actions = []
         if obj.user:
@@ -142,8 +168,12 @@ class FiscalAdmin(AdminRowActionsMixin, admin.ModelAdmin):
         if o.asignacion:
             return o.asignacion.lugar_votacion if o.es_general else o.asignacion.mesa
 
+    def es_staff(o):
+        return o.user.is_staff
+    es_staff.boolean = True
+
     form = FiscalForm
-    list_display = ('__str__', 'dni', 'tipo', 'disponibilidad', 'escuela_donde_vota', 'movilidad', telefonos, asignado_a)
+    list_display = ('__str__', 'dni', 'tipo', es_staff, telefonos)
     search_fields = (
         'apellido', 'nombres', 'direccion', 'dni',
         'asignacion_escuela__lugar_votacion__nombre',
@@ -151,7 +181,7 @@ class FiscalAdmin(AdminRowActionsMixin, admin.ModelAdmin):
     )
     list_display_links = ('__str__',)
     raw_id_fields = ("escuela_donde_vota",)
-    list_filter = ('estado', 'email_confirmado', AsignadoFilter, 'tipo', ReferenteFilter, 'organizacion')
+    list_filter = (EsStaffFilter, 'estado', 'email_confirmado', AsignadoFilter, 'tipo', ReferenteFilter, 'organizacion')
     readonly_fields = ('mesas_desde_hasta',)
     inlines = [
         ContactoAdminInline,
