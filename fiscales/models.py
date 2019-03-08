@@ -17,6 +17,9 @@ from model_utils.fields import StatusField
 from model_utils import Choices
 
 
+TOTAL = 'Total General'
+
+
 
 class Organizacion(models.Model):
     nombre = models.CharField(max_length=100)
@@ -170,6 +173,15 @@ class Fiscal(models.Model):
     @property
     def mesas_desde_hasta(self):
         return desde_hasta(self.mesas_asignadas)
+
+
+    def tiempo_de_carga(self):
+        result = self.votomesareportado_set.filter(opcion__nombre=TOTAL).order_by('-created')[:2]
+        if result.count() == 2:
+            return (result[0].created - result[1].created).total_seconds()
+        return None
+
+
 
     def __str__(self):
         return f'{self.nombres} {self.apellido}'

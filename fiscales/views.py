@@ -22,6 +22,8 @@ from .models import Fiscal, AsignacionFiscalGeneral, AsignacionFiscalDeMesa
 from elecciones.models import (
     Mesa, Eleccion, VotoMesaReportado, Circuito, LugarVotacion, Seccion
 )
+from datetime import timedelta
+from django.utils import timezone
 from formtools.wizard.views import SessionWizardView
 from django.template.loader import render_to_string
 from html2text import html2text

@@ -1,6 +1,8 @@
 from functools import lru_cache
 from collections import defaultdict, OrderedDict
 from django.http import JsonResponse
+from datetime import timedelta
+from django.utils import timezone
 from django.template.loader import render_to_string
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
@@ -17,7 +19,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 
 from django.http import HttpResponse
 from django.views import View
-
+from django.contrib.auth.models import User
 from fiscales.models import Fiscal
 from .forms import ReferentesForm, LoggueConMesaForm
 from .models import *
@@ -519,3 +521,24 @@ def fiscal_mesa(request):
             messages.warning(request, "mesa no existe o no sin fiscal")
 
     return render(request, 'elecciones/add_referentes.html', {'form':form})
+
+
+@user_passes_test(lambda u: u.is_superuser)
+def dashboard(request):
+    """
+    un panel con stats utiles
+    """
+
+    desde = timezone.now() - timedelta(minutes=5)
+
+    # usuarios que se acaban de loguear o han guardado un acta en los ultimos 5 minutos
+    # TODO considerar los que sólo clasifican actas
+    fiscales_online = Fiscal.objects.filter(Q(user__last_login__gte=desde) | Q(votomesareportado__created__gte=desde)).distinct()
+
+    data = {'dataentries online': fiscales_online.count()}
+    data['tiempo_de_carga'] = {str(f): f.tiempo_de_carga() for f in fiscales_online}
+
+    data['tiempo_de_carga_promedio'] = sum(data['tiempo_de_carga'].values()) / data['dataentries online'] if data['dataentries online'] else '-'
+
+    return JsonResponse(data)
+

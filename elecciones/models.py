@@ -14,9 +14,9 @@ from django.utils.text import slugify
 from django.dispatch import receiver
 from django.db.models.signals import m2m_changed, post_save
 from model_utils.fields import StatusField, MonitorField
+from model_utils.models import TimeStampedModel
 from model_utils import Choices
 from adjuntos.models import Attachment
-
 
 def desde_hasta(qs):
     qs = qs.values_list('numero', flat=True).order_by('numero')
@@ -367,11 +367,12 @@ class Eleccion(models.Model):
         return self.nombre
 
 
-class VotoMesaReportado(models.Model):
+class VotoMesaReportado(TimeStampedModel):
     mesa = models.ForeignKey(Mesa)
     opcion = models.ForeignKey(Opcion)
     votos = models.PositiveIntegerField(null=True)
     fiscal = models.ForeignKey('fiscales.Fiscal', null=True)
+
 
     class Meta:
         unique_together = ('mesa', 'opcion', 'fiscal')
