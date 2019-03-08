@@ -287,7 +287,7 @@ class ResultadosEleccion(TemplateView):
             for ag in agrupaciones:
                 datos_ponderacion[ag] = self.resultado_agrupacion(eleccion, ag, sum_por_partido, otras_opciones)
                 if datos_ponderacion[ag]["escrutados"] is None:
-                    proyeccion_incompleta.append(f"{ag}") 
+                    proyeccion_incompleta.append(f"{ag}")
 #                    proyeccion_incompleta.append(str(ag.numero)+"-"+ag.nombre)
                 else:
                     electores_pond += datos_ponderacion[ag]["electores"]
@@ -323,11 +323,10 @@ class ResultadosEleccion(TemplateView):
 
 
         # TODO revisar si opciones contables no asociadas a partido.
-
         tabla_positivos = OrderedDict(
             sorted(
                 [(k, v) for k,v in result.items() if isinstance(k, Partido)],
-                key=lambda x: x[1]["votos"], reverse=True)
+                key=lambda x: float(x[1]["proyeccion" if proyectado else "votos"]), reverse=True)
             )
 
         # como se hace para que los "Positivos" estén primeros en la tabla???
