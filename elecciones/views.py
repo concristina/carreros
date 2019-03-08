@@ -149,13 +149,10 @@ class ResultadosEleccion(TemplateView):
 
     def resultado_agrupacion(self, eleccion, agrupacion, sum_por_partido, otras_opciones):
         resumen = {}
-
-
         mesas_agrupacion = Mesa.objects.filter(
             lugar_votacion__circuito__seccion_de_ponderacion=agrupacion
-        ).distinct()
-        mesas_escrutadas = mesas_agrupacion.filter(votomesareportado__isnull=False)
-
+        )
+        mesas_escrutadas = mesas_agrupacion.filter(votomesareportado__isnull=False).distinct()
         electores = mesas_agrupacion.aggregate(v=Sum('electores'))['v']
         escrutados = mesas_escrutadas.aggregate(v=Sum('electores'))['v']
         reportados = VotoMesaReportado.objects.filter(
@@ -310,7 +307,6 @@ class ResultadosEleccion(TemplateView):
                 # Sería multiplicar dos columnas y sumar.
                 acumulador_total = 0
                 acumulador_positivos = 0
-                import ipdb; ipdb.set_trace()
                 for ag in agrupaciones:
                     if k in datos_ponderacion[ag]:
                         data = datos_ponderacion[ag][k]
