@@ -29,6 +29,9 @@ class AuthenticationFormCustomError(AuthenticationForm):
         'inactive': _("This account is inactive."),
     }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['username'].label = 'Nombre de usuario o DNI'
 
 
 def opciones_actuales():
