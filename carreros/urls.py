@@ -26,11 +26,11 @@ urlpatterns = [
     url(r'', include(frontend_urls)),
     url(r'', include('django.contrib.auth.urls')),
     url(r'^hijack/', include('hijack.urls')),
-
     url(r'^admin/', admin.site.urls),
     url(r'^fiscales/', include(fiscales_urls)),
-    url(r'^elecciones/', include(elecciones_urls)),
 
+    url(r'^elecciones/', include(elecciones_urls)),
+    url(r'^dashboard/', views_elecciones.dashboard),
     url(r'^clasificar-actas/', include('adjuntos.urls')),
     url('^resultados/(?P<slug>\w+)/$', cached(views_elecciones.ResultadosEleccion.as_view()), name='resultados-eleccion'),
 ]
