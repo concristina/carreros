@@ -65,3 +65,7 @@ class SubirAttachmentModelForm(forms.ModelForm):
     class Meta:
         model = Attachment
         fields = ['foto']
+
+
+class AgregarAttachmentsModelForm(forms.Form):
+    file_field = forms.FileField(widget=forms.ClearableFileInput(attrs={'multiple': True}))
