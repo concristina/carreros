@@ -1,7 +1,7 @@
 from fabric.api import run, env, cd, prefix
 from fabric.decorators import roles
 from fabric.contrib.files import append
-from carreros.local_settings import HOST_IP, HOST_USER, VENV, PROJECT_PATH, PROJECT_USER
+from carreros.local_settings import HOSTS, HOST_USER, VENV, PROJECT_PATH, PROJECT_USER
 
 env.hosts = HOSTS
 env.user = HOST_USER
