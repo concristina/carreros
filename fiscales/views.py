@@ -15,6 +15,7 @@ from django.core.management import call_command
 from django.utils import timezone
 from datetime import timedelta
 from django.utils.safestring import mark_safe
+from django.db import IntegrityError, transaction
 from django.db.models import Q
 from annoying.functions import get_object_or_None
 from prensa.forms import MinimoContactoInlineFormset
@@ -30,6 +31,7 @@ from html2text import html2text
 from django.core.mail import send_mail
 from django.contrib.admin.views.decorators import staff_member_required
 from django import forms
+from sentry_sdk import capture_exception
 from .forms import (
     MisDatosForm,
     FiscalFormSimple,
@@ -632,7 +634,7 @@ def cargar_resultados(request, eleccion_id, mesa_numero):
 
     mesa = get_object_or_404(Mesa, eleccion__id=eleccion_id, numero=mesa_numero)
     data = request.POST if request.method == 'POST' else None
-    qs = VotoMesaReportado.objects.filter(mesa=mesa, fiscal=fiscal)
+    qs = VotoMesaReportado.objects.filter(mesa=mesa)        # , fiscal=fiscal)
     initial = [{'opcion': o} for o in Eleccion.opciones_actuales()]
     formset = VotoMesaReportadoFormset(data, queryset=qs, initial=initial, mesa=mesa)
 
@@ -646,15 +648,24 @@ def cargar_resultados(request, eleccion_id, mesa_numero):
 
     # eleccion = Eleccion.objects.last()
     if is_valid:
-        for form in formset:
-            vmr = form.save(commit=False)
-            vmr.mesa = mesa
-            vmr.fiscal = fiscal
-            # vmr.eleccion = eleccion
-            vmr.save()
 
-        messages.success(request, 'Guardados los resultados de la mesa ')
+        try:
+            with transaction.atomic():
+                for form in formset:
+                    vmr = form.save(commit=False)
+                    vmr.mesa = mesa
+                    vmr.fiscal = fiscal
+                    # vmr.eleccion = eleccion
+                    vmr.save()
+            messages.success(request, 'Guardados los resultados de la mesa ')
+        except IntegrityError as e:
+            # hubo otra carga previa.
+            capture_exception(e)
+            messages.error(request, 'Alguien cargó esta mesa con anterioridad')
+
+
         return redirect('elegir-acta-a-cargar')
+
 
     return render(
         request, "fiscales/carga.html",

@@ -1,8 +1,19 @@
 import factory
+from django.contrib.auth.models import User
 from factory.django import DjangoModelFactory
 from faker import Faker
 from elecciones.views import TOTAL, POSITIVOS
 fake = Faker('es_ES')
+
+
+class UserFactory(DjangoModelFactory):
+    class Meta:
+        model = User
+
+    username = factory.Sequence(lambda n: f'user{n}')
+    email = factory.Sequence(lambda n: f'user{n}@foo.com')
+    password = factory.PostGenerationMethodCall('set_password', 'password')
+    is_staff = True
 
 
 class PartidoFactory(DjangoModelFactory):
@@ -38,9 +49,8 @@ class EleccionFactory(DjangoModelFactory):
             for opcion in extracted:
                 self.opciones.add(opcion)
         else:
-            self.opciones.add(OpcionFactory(nombre=TOTAL, partido=None))
-            self.opciones.add(OpcionFactory(nombre=POSITIVOS, partido=None))
-            self.opciones.add(OpcionFactory(nombre='opc1'))
+            self.opciones.add(OpcionFactory(nombre=TOTAL, partido=None, es_contable=False))
+            self.opciones.add(OpcionFactory(nombre='opc1', es_contable=True))
             self.opciones.add(OpcionFactory(nombre='opc2'))
             self.opciones.add(OpcionFactory(nombre='opc3'))
 
@@ -84,11 +94,13 @@ class MesaFactory(DjangoModelFactory):
 class FiscalGeneralFactory(DjangoModelFactory):
     class Meta:
         model = 'fiscales.Fiscal'
+    user = factory.SubFactory('User')
     estado = 'CONFIRMADO'
     apellido = fake.last_name_male()
     nombres = fake.first_name_male()
     dni = factory.Sequence(lambda n: f'{n}00000{n}')
     tipo = 'general'
+
 
 
 class FiscalDeMesaFactory(FiscalGeneralFactory):

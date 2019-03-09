@@ -375,7 +375,9 @@ class VotoMesaReportado(TimeStampedModel):
 
 
     class Meta:
-        unique_together = ('mesa', 'opcion', 'fiscal')
+        # unique_together = ('mesa', 'opcion', 'fiscal')
+        # sólo vamos a permitir una carga por mesa.
+        unique_together = ('mesa', 'opcion')
 
 
     def __str__(self):
