@@ -108,7 +108,7 @@ exportar_email_fiscales.short_description = "Exportar Email Fiscales"
 def hacer_staff(modeladmin, request, queryset):
     for f in queryset:
         f.user.is_staff = True
-        f.save(update_field=['user'])
+        f.user.save(update_fields=['is_staff'])
 
 hacer_staff.short_description = "Hacer staff (dataentry)"
 
