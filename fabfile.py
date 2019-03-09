@@ -3,7 +3,7 @@ from fabric.decorators import roles
 from fabric.contrib.files import append
 from carreros.local_settings import HOST_IP, HOST_USER, VENV, PROJECT_PATH, PROJECT_USER
 
-env.hosts = [HOST_IP]
+env.hosts = HOSTS
 env.user = HOST_USER
 
 
