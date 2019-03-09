@@ -681,7 +681,7 @@ def chequear_resultado_mesa(request, eleccion_id, mesa_numero):
         mesa.save(update_fields=['carga_confirmada'])
         return redirect('chequear-resultado')
 
-    reportados = mesa.votomesareportado_set.all()
+    reportados = mesa.votomesareportado_set.all().order_by('opcion__orden')
     return render(
         request,
         "fiscales/chequeo_mesa.html",
