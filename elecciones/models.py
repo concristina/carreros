@@ -242,6 +242,8 @@ class Mesa(models.Model):
             eleccion__id=1,
             orden_de_carga__gte=1,
         ).filter(
+            Q(problemas__isnull=True) | Q(problemas__estado='resuelto')      # sin problemas en curso
+        ).filter(
             Q(taken__isnull=True) | Q(taken__lt=desde)
         )
 
