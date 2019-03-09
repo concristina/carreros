@@ -2,14 +2,14 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.http import JsonResponse
 from django.urls import reverse
-from django.views.generic.edit import UpdateView
+from django.views.generic.edit import UpdateView, FormView
 from elecciones.views import StaffOnlyMixing
 from django.contrib.admin.views.decorators import staff_member_required
 import base64
 from django.core.files.base import ContentFile
 from django.views.decorators.csrf import csrf_exempt
 from .models import Attachment
-from .forms import AsignarMesaForm
+from .forms import AsignarMesaForm, AgregarAttachmentsModelForm
 
 
 
@@ -66,4 +66,26 @@ def editar_foto(request, attachment_id):
     return JsonResponse({'message': 'No se pudo guardar la imágen'})
 
 
+class AgregarAdjuntos(FormView):
+    form_class = AgregarAttachmentsModelForm
+    template_name = 'adjuntos/agregar-adjuntos.html'
+    success_url = 'agregada'
 
+    def post(self, request, *args, **kwargs):
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        files = request.FILES.getlist('file_field')
+        if form.is_valid():
+            for f in files:
+                instance = Attachment(
+                    mimetype=f.content_type
+                )
+                instance.foto.save(f.name, f, save=False)
+                instance.save()
+            return self.form_valid(form)
+        else:
+            return self.form_invalid(form)
+
+@staff_member_required
+def agregada(request):
+    return render(request, 'adjuntos/agregada.html')

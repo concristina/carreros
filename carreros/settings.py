@@ -42,7 +42,6 @@ INSTALLED_APPS = [
     'rest_framework',
     'admincommand',
     'anymail',
-    'raven.contrib.django.raven_compat',
     'localflavor',
     'django_extensions',
     'fancy_cache',
