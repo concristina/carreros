@@ -35,7 +35,10 @@ $(document).ready(function(){
 
 
 {% block card-content %}
-    <div class="card-title"> Mesa {{ object.numero }}</div>
+    <div class="card-title"> Mesa {{ object.numero }}
+
+
+    <a class="waves-effect waves-light btn-flat right-align" href="{% url "reportar-problema" object.numero %}" >¿Problemas?</a></div>
 
     {{ formset.management_form }}
     {% for form in formset %}
@@ -68,6 +71,7 @@ $(document).ready(function(){
 {% endblock card-action %}
 
 {% block right-panel %}
+
     <div class="acta card">
 
         <div class="card-content">

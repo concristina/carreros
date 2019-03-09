@@ -9,6 +9,7 @@ from fiscales.views import choice_home, QuieroSerFiscal, confirmar_email
 from elecciones import views as views_elecciones
 from fiscales.forms import AuthenticationFormCustomError
 from django.contrib.auth import views as auth_views
+from problemas.views import ProblemaCreate
 from fancy_cache import cache_page
 
 
@@ -31,6 +32,8 @@ urlpatterns = [
     url(r'^elecciones/', include(elecciones_urls)),
     url(r'^dashboard/', views_elecciones.dashboard),
     url(r'^clasificar-actas/', include('adjuntos.urls')),
+    url('^reportar-problema/(?P<mesa_numero>\d+)$', ProblemaCreate.as_view(), name='reportar-problema'),
+
     url('^resultados/(?P<slug>\w+)/$', cached(views_elecciones.ResultadosEleccion.as_view()), name='resultados-eleccion'),
 ]
 

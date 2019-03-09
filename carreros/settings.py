@@ -68,6 +68,7 @@ INSTALLED_APPS = [
     'elecciones',
     'fiscales',
     'adjuntos',
+    'problemas',
     'api',
     'candidatos',
     'geo.apps.GeoConfig',
