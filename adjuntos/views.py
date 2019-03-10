@@ -5,6 +5,8 @@ from django.urls import reverse
 from django.views.generic.edit import UpdateView, FormView
 from elecciones.views import StaffOnlyMixing
 from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib import messages
+
 import base64
 from django.core.files.base import ContentFile
 from django.views.decorators.csrf import csrf_exempt
@@ -76,16 +78,21 @@ class AgregarAdjuntos(StaffOnlyMixing, FormView):
         form = self.get_form(form_class)
         files = request.FILES.getlist('file_field')
         if form.is_valid():
+            c = 0
             for f in files:
+                if f.content_type not in ('image/jpeg', 'image/png'):
+                    messages.warning(self.request, f'{f.name} ignorado. No es imagen' )
+                    continue
+
                 instance = Attachment(
                     mimetype=f.content_type
                 )
                 instance.foto.save(f.name, f, save=False)
                 instance.save()
-            return self.form_valid(form)
+                c += 1
+
+            if c:
+                messages.success(self.request, f'Subiste {c} imagenes de actas. Gracias!')
+            return redirect('agregar-adjuntos')
         else:
             return self.form_invalid(form)
-
-@staff_member_required
-def agregada(request):
-    return render(request, 'adjuntos/agregada.html')
