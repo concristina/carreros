@@ -4,6 +4,12 @@
 {% block js %}
 {{ block.super }}
 
+<style>
+.tabs {
+        height:100%;
+}
+</style>
+
 <script type="text/javascript">
 
 $(document).ready(function(){
@@ -90,7 +96,7 @@ $(document).ready(function(){
 
                 <div id="foto{{ forloop.counter }}" class="col s12">
 
-                    <a href="{{ foto.url }}" onclick="return !window.open(this.href, 'Acta mesa Nº {{ object.numero }}', 'width=640,height=600')">ampliar</a>
+                    <a href="{{ foto.url }}" onclick="return !window.open(this.href, 'Acta mesa Nº {{ object.numero }}', 'width=640,height=600')">ampliar</a><br>
 
                     <img class="responsive-img" src="{{ foto.thumbnail.960x.url }}">
 
