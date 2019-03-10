@@ -78,7 +78,7 @@ class Mapa(StaffOnlyMixing, TemplateView):
         return context
 
 
-class ResultadosEleccion(TemplateView):
+class ResultadosEleccion(StaffOnlyMixing, TemplateView):
     template_name = "elecciones/resultados.html"
 
     def get_template_names(self):
@@ -143,14 +143,12 @@ class ResultadosEleccion(TemplateView):
 
             elif 'agrupacionpk' in self.request.GET:
                 lookups = Q(lugar_votacion__circuito__seccion_de_ponderacion__in=self.filtros)
-#                lookups = Q(lugar_votacion__circuito__agrupacionpk__in=self.filtros)
 
         mesas = Mesa.objects.filter(eleccion=eleccion).filter(lookups).distinct()
         electores = mesas.aggregate(v=Sum('electores'))['v']
         return electores or 0
 
     def resultado_agrupacion(self, eleccion, agrupacion, sum_por_partido, otras_opciones):
-#        resumen = {}
         mesas_agrupacion = Mesa.objects.filter(
             lugar_votacion__circuito__seccion_de_ponderacion=agrupacion
         )
@@ -211,8 +209,6 @@ class ResultadosEleccion(TemplateView):
             if 'agrupacionpk' in self.request.GET:
                 lookups = Q(mesa__lugar_votacion__circuito__seccion_de_ponderacion__in=self.filtros)
                 lookups2 = Q(lugar_votacion__circuito__seccion_de_ponderacion__in=self.filtros)
-#                lookups = Q(mesa__lugar_votacion__circuito__agrupacionpk__in=self.filtros)
-#                lookups2 = Q(lugar_votacion__circuito__agrupacionpk__in=self.filtros)
 
             elif 'seccion' in self.request.GET:
                 lookups = Q(mesa__lugar_votacion__circuito__seccion__in=self.filtros)
@@ -381,114 +377,6 @@ class ResultadosEleccion(TemplateView):
         return context
 
 
-
-class ResultadosProyectadosEleccion(StaffOnlyMixing, TemplateView):
-    template_name = "elecciones/proyecciones.html"
-
-    @property
-    @lru_cache(128)
-    def filtros(self):
-        pass
-
-    @property
-    @lru_cache(128)
-    def mesas(self):
-        return Mesa.objects.filter(eleccion_id=1).order_by("numero")
-
-    @property
-    @lru_cache(128)
-    def grupos(self):
-        secciones_no_capital = list(Seccion.objects.all().exclude(id=1).order_by("numero"))
-#        circuitos_capital= list(Circuito.objects.filter(seccion__id=1).order_by("numero"))
-        return secciones_no_capital # + circuitos_capital
-
-    def mesas_para_grupo(self, grupo):
-        return [mesa for mesa in self.mesas if mesa.grupo_tabla_proyecciones == grupo]
-
-    def resumen_mesa(self, mesa):
-        resultados = mesa.votomesareportado_set.all()
-        resumen = {}
-        resumen["mesa"] = str(mesa)
-        resumen["electores"] = mesa.electores
-        resumen["escrutada"] = False
-
-        def valor_resultado(nom_corto):
-            res = 0
-            try:
-                res = resultados.get(opcion__nombre_corto=nom_corto)
-            except:
-                pass
-            return res
-
-        resumen["Positivos"] = valor_resultado("Positivos")
-
-        if resumen["Positivos"] > 0:
-            resumen["escrutada"] = True
-
-            for nc in ["Total", "Cambiemos", "UPC", "FCC"]:
-                resumen[nc] = valor_resultado(nc)
-
-            resumen["Otros"] = resumen["Positivos"]\
-                               - (resumen["Cambiemos"] + resumen["UPC"] + resumen["FCC"])
-
-            for nc in ["Cambiemos", "UPC", "FCC", "Otros"]:
-                resumen[nc+"_porcentaje"] = 100.0 * (resumen[nc] / resumen["Positivos"])
-        else:
-            for nc in ["Total", "Cambiemos", "UPC", "FCC", "Otros"]:
-                resumen[nc] = 0
-
-        return resumen
-
-
-    def nombre_grupo(self, g):
-        return ("Seccion" if isinstance(g, Seccion) else "Circuito")+" No "+str(g.numero)
-
-    def resumen_grupo(self, grupo):
-        resumen = {}
-        resumen["grupo"] = self.nombre_grupo(grupo)
-        resumen["resumenes_mesas"] = [self.resumen_mesa(m) for m in self.mesas_para_grupo(grupo)]
-
-        for c in ["electores", "Total", "Positivos", "Cambiemos", "UPC", "FCC", "Otros"]:
-            resumen[c] = 0
-
-        for rm in resumen["resumenes_mesas"]:
-            for c in ["electores", "Total", "Positivos", "Cambiemos", "UPC", "FCC", "Otros"]:
-                resumen[c] += rm[c]
-
-        resumen["resumenes_mesas"] = [rm for rm in resumen["resumenes_mesas"] if rm["escrutada"]]
-        resumen["electores_escrutados"] = sum([rm["electores"] for rm in resumen["resumenes_mesas"]])
-
-        return resumen
-
-    @property
-    @lru_cache(128)
-    def filas_tabla(self):
-        return [self.resumen_grupo(g) for g in self.grupos]
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-
-        context['para'] = 'Neuquén'
-        context['eleccion'] = Eleccion.objects.filter(id=1)
-        context['filas_tabla'] = self.filas_tabla
-
-        context['total_electores'] = sum([rg["electores"] for rg in context['filas_tabla']])
-        for rg in context['filas_tabla']:
-            rg["peso_escrutado"]= (rg["electores_escrutados"] / context['total_electores']) if context['total_electores'] > 0 else 0.0
-            for c in ["Positivos", "Cambiemos", "UPC", "FCC", "Otros"]:
-                rg[c+"_proy"] = len(rg["resumenes_mesas"]) * (rg[c] * rg["peso_escrutado"])
-
-        for c in ["Positivos", "Cambiemos", "UPC", "FCC", "Otros"]:
-            context[c + "_proy_total"] = 0
-        for rg in context['filas_tabla']:
-            for c in ["Positivos", "Cambiemos", "UPC", "FCC", "Otros"]:
-                context[c+ "_proy_total"] += rg[c+"_proy"]
-
-        if context["Positivos_proy_total"] > 0:
-            for c in ["Cambiemos", "UPC", "FCC", "Otros"]:
-                context[c + "_proy_total_proc"] =  context[c+ "_proy_total"] / context["Positivos_proy_total"]
-
-        return context
 
 
 @user_passes_test(lambda u: u.is_superuser)

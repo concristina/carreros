@@ -20,9 +20,17 @@
         {% endcomment %}
 
         {% if request.user.is_superuser %}
-            <li {% if url in request.path %} class="active"{% endif %}>
+            <li>
                 <a href="{% url "admin:index" %}" class="collapsible-header" data-turbolinks="false">Admin<i class="material-icons">dashboard</i></a>
             </li>
+
+            <li>
+                <a href="{% url "mapa" %}" class="collapsible-header" data-turbolinks="false">Mapa<i class="material-icons">map</i></a>
+            </li>
+
+
+            <li></li>
+
         {% endif  %}
 
         {% if request.user.is_staff %}
@@ -50,13 +58,18 @@ check_box</i><span class="badge">{{ mesas_a_confirmar_count }}</span></a>
         {% endif %}
 
 
-
-
         <li>
-            <a href="{% url "resultados-eleccion" %}" class="collapsible-header" data-turbolinks="false">Resultados<i class="material-icons">pie_chart</i></a>
+            <a href="{% if request.user.is_staff %} {% url "resultados-eleccion" %}{% else %}#{% endif %}" class="collapsible-header" data-turbolinks="false">Resultados<i class="material-icons">pie_chart</i></a>
         </li>
 
-
+        {% if request.user.is_superuser %}
+        <li>
+            <a href="{% url "resultados-eleccion" %}?proyectado=✓" class="collapsible-header" data-turbolinks="false">Proyección<i class="material-icons">pie_chart</i></a>
+        </li>
+        <li>
+            <a href="{% url "resultados-pk-eleccion" %}?proyectado=✓" class="collapsible-header" data-turbolinks="false">Proyección PK<i class="material-icons">pie_chart</i></a>
+        </li>
+        {% endif %}
 
 
         <li>
@@ -64,35 +77,6 @@ check_box</i><span class="badge">{{ mesas_a_confirmar_count }}</span></a>
         </li>
 
 
-        {% comment %}
-
-        {% url 'mis-datos' as url %}
-        <li {% if url in request.path %} class="active"{% endif %}>
-            <a href="{{ url }}" class="collapsible-header" data-turbolinks="false">Mis datos<i class="material-icons">tag_faces</i></a>
-        </li>
-
-        {% url 'mis-contactos' as url %}
-        <li {% if url in request.path %} class="active"{% endif %}>
-           <a href="{{ url }}" class="collapsible-header" data-turbolinks="false">Mis Contactos<i class="material-icons">contacts</i></a>
-        </li>
-
-        {% if request.user.fiscal.es_general %}
-
-        {% url 'mis-voluntarios' as url %}
-        <li {% if url in request.path %} class="active"{% endif %}>
-           <a href="{{ url }}" class="collapsible-header" data-turbolinks="false">Mis Voluntarios<i class="material-icons">contacts</i></a>
-        </li>
-        {% endif %}
-
-        {% block donde %}
-
-        {% url 'donde-fiscalizo' as url %}
-        <li {% if url in request.path %} class="active"{% endif %}>
-            <a href="{{ url }}" class="collapsible-header" data-turbolinks="false">Dónde fiscalizo<i class="material-icons">place</i></a>
-        </li>
-        {% endblock donde %}
-
-        {% endcomment %}
 
         <li>
             <a href="{% url 'logout' %}" class="collapsible-header"  data-turbolinks="false">Cerrar sesión<i class="material-icons">exit_to_app</i></a>
