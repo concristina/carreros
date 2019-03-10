@@ -25,6 +25,10 @@ def dbrestore():
     manage('dbrestore -z')
 
 
+def clear_cache():
+    manage('clear_cache')
+
+
 def append_to_local_settings(path):
     with open(path) as ls:
         content = ls.read()
