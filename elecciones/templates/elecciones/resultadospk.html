@@ -55,7 +55,7 @@
                 {% if resultados.proyectado %}
                   {% if resultados.proyeccion_incompleta  %}
                     <h4 style="background-color: red"> Proyección de datos incompleta </h4>
-                    <h5> Con un total de {{ resultados.porcentaje_mesas_escrutadas }}% de mesas escrutadas, restan de cargar datos en </h5>
+                    <h5> Con un total de {{ resultados.porcentaje_mesas_escrutadas }}% de mesas escrutadas. Faltan cargar datos en </h5>
                       {% for ag in resultados.proyeccion_incompleta %}
                         <li> {{ ag|safe }}</li>
                       {% endfor %}
