@@ -253,7 +253,8 @@ class Mesa(models.Model):
         return cls.objects.filter(
             votomesareportado__isnull=False,
             carga_confirmada=False,
-            problemas__isnull=True,
+        ).filter(
+            Q(problemas__isnull=True) | Q(problemas__estado='resuelto')
         ).distinct()
 
     def get_absolute_url(self):
