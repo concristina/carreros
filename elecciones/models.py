@@ -250,7 +250,11 @@ class Mesa(models.Model):
 
     @classmethod
     def con_carga_a_confirmar(cls):
-        return cls.objects.filter(votomesareportado__isnull=False, carga_confirmada=False).distinct()
+        return cls.objects.filter(
+            votomesareportado__isnull=False,
+            carga_confirmada=False,
+            problemas__isnull=True,
+        ).distinct()
 
     def get_absolute_url(self):
         return reverse('detalle-mesa', args=(self.eleccion.id, self.numero,))
