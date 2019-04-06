@@ -58,6 +58,7 @@ def deploy():
 def full_deploy():
     with cd(PROJECT_PATH):
         run("git pull")
+        run("git checkout cba")
         run(f"{VENV}bin/pip install -r requirements.txt")
     manage("migrate")
     manage("loaddata fixtures/neuquen.json")
